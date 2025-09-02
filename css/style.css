@@ -1,0 +1,132 @@
+/* ======================== */
+/* 1. CSS Variables */
+/* ======================== */
+:root {
+    --primary-bg: #F0F0F0;     /* Soft off-white */
+    --secondary-bg: #E0E0E0;   /* Light gray for cards */
+    --text-color: #333333;     /* Dark gray for text */
+    --accent-color: #5A7E64;   /* A nice sage green */
+    --link-color: #8D8D8D;     /* Muted gray for links */
+}
+
+/* ======================== */
+/* 2. Base Styles */
+/* ======================== */
+body {
+    font-family: 'Inter', sans-serif;
+    line-height: 1.6;
+    margin: 0;
+    padding: 0;
+    background-color: var(--primary-bg);
+    color: var(--text-color);
+}
+
+h1, h2, h3 {
+    color: var(--accent-color);
+}
+
+a {
+    color: var(--link-color);
+    text-decoration: none;
+}
+
+a:hover {
+    color: var(--accent-color);
+}
+
+/* ======================== */
+/* 3. Layout & Structure */
+/* ======================== */
+header {
+    background: var(--accent-color);
+    color: #fff;
+    padding: 1rem 0;
+    text-align: center;
+}
+
+header nav ul {
+    list-style: none;
+    padding: 0;
+}
+
+header nav ul li {
+    display: inline;
+    margin: 0 15px;
+}
+
+header nav ul li a {
+    color: #fff;
+    text-decoration: none;
+}
+
+main {
+    padding: 2rem;
+    max-width: 960px;
+    margin: auto;
+}
+
+.hero {
+    text-align: center;
+    padding: 4rem 0;
+    background: #fff;
+    border-radius: 8px;
+    margin-bottom: 2rem;
+}
+
+footer {
+    text-align: center;
+    padding: 1rem;
+    background: #333;
+    color: #fff;
+    margin-top: 2rem;
+}
+
+/* ======================== */
+/* 4. Component Styles */
+/* ======================== */
+#projects {
+    text-align: center;
+}
+
+.project-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 20px;
+}
+
+.project-card {
+    background: white; 
+    padding: 1.5rem;
+    border-radius: 8px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    transition: transform 0.3s;
+}
+
+.project-card:hover {
+    transform: translateY(-5px);
+}
+
+.project-card a {
+    text-decoration: none;
+    color: inherit;
+    display: block;
+}
+
+
+.image-gallery {
+    display: flex;
+    flex-wrap: wrap; /* Allows images to wrap to the next line if the container is too small */
+    gap: 1rem;       /* Adds a 1rem space between images */
+    justify-content: center; /* Centers the images horizontally */
+    margin-top: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+.image-gallery img {
+    max-width: 30%; /* Image will take up 100% of its parent container's width, but not exceed its natural size */
+    height: auto;    /* Maintain aspect ratio */
+    display: block;  /* Removes extra space below the image */
+    margin-bottom: 1rem; /* Add some space between images if they stack */
+    border-radius: 8px; /* Optional: adds rounded corners */
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1); /* Optional: subtle shadow */
+}
