@@ -3,34 +3,368 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Project 1</title>
-    <link rel="stylesheet" href="../../css/style.css">
+    <title>Project 1: Colorizing Prokudin-Gorskii</title>
+    
+    <style>
+        /* General Body & Typography */
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
+            line-height: 1.6;
+            margin: 0;
+            padding: 0;
+            background-color: #f8f9fa;
+            color: #333;
+        }
+
+        .wrapper {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+
+        /* Header Styles */
+        .site-header {
+            border-bottom: 1px solid #e0e0e0;
+            padding: 15px 0;
+            background-color: #fff;
+        }
+        .site-title {
+            font-size: 1.5em;
+            font-weight: bold;
+            text-decoration: none;
+            color: #333;
+        }
+        .site-nav {
+            float: right;
+        }
+
+        /* Main Content */
+        main {
+            padding: 20px 0;
+        }
+        h1, h2, h3 {
+            border-bottom: 1px solid #eee;
+            padding-bottom: 10px;
+            margin-top: 40px;
+        }
+        p {
+            margin-bottom: 1em;
+        }
+        code {
+            background-color: #e8e8e8;
+            padding: 2px 5px;
+            border-radius: 4px;
+        }
+        
+        /* Responsive Images - This is the key fix */
+        img {
+            max-width: 100%;
+            height: auto;
+            display: block; /* Removes bottom space */
+            border-radius: 8px; /* Adds nice rounded corners to images */
+        }
+        
+        /* Flexbox for the initial small showcase images */
+        .image-showcase {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            flex-wrap: wrap;
+            margin: 20px 0;
+        }
+        .image-showcase img {
+             /* Set a max width for these smaller examples */
+            max-width: 250px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        /* Gallery Grid for image panels/cards */
+        .gallery-container {
+            display: grid;
+            /* This creates responsive columns. They'll be at least 350px wide but will stretch. */
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 25px; /* Space between cards */
+            padding: 20px 0;
+        }
+
+        /* Individual Card Styling */
+        .gallery-card {
+            border: 1px solid #ddd;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+            overflow: hidden; /* Keeps image corners rounded */
+            background-color: #ffffff;
+            display: flex;
+            flex-direction: column;
+            transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+        }
+        .gallery-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 16px rgba(0,0,0,0.12);
+        }
+        .gallery-card img {
+            border-radius: 12px 12px 0 0; /* Only round top corners of image */
+        }
+
+        /* Card Caption Styling */
+        .card-caption {
+            padding: 15px;
+            font-size: 0.9rem;
+            color: #444;
+            text-align: center;
+            flex-grow: 1; /* Helps align content if cards have different text heights */
+        }
+        .card-caption p {
+            margin: 4px 0;
+        }
+        .card-caption .title {
+            font-weight: bold;
+            font-size: 1.1em;
+            margin-bottom: 8px;
+        }
+
+        /* Styles for comparison sections */
+        .comparison-section h3 {
+           text-align: center;
+           border: none;
+           font-size: 1.5em;
+           margin-bottom: 0;
+        }
+        
+        /* Footer Styles */
+        .site-footer {
+            border-top: 1px solid #e0e0e0;
+            padding: 20px 0;
+            margin-top: 40px;
+            font-size: 0.9em;
+            color: #666;
+        }
+        
+        /* Mobile Responsiveness */
+        @media (max-width: 768px) {
+            .gallery-container {
+                /* On smaller screens, stack cards in a single column */
+                grid-template-columns: 1fr;
+            }
+            .site-header, .site-footer .wrapper {
+                text-align: center;
+            }
+            .site-nav {
+                float: none;
+                margin-top: 10px;
+            }
+        }
+    </style>
 </head>
 <body>
-    <header>
-        <nav>
-            <ul>
-                <li><a href="../../index.html">Home</a></li>
-                <li><a href="../../about.html">About</a></li>
-                <li><a href="../../index.html#projects">Projects</a></li>
-            </ul>
-        </nav>
-    </header>
 
-    <main>
-        <section>
-            <h2>Project 1: [Your Project Title Here]</h2>
-            <p>
-                This is a detailed description of your first CS180 project. 
-                Explain what the project does, the problem it solves, and the technologies or algorithms you used.
-            </p>
-            <p>
-                Provide screenshots or a demo link here.
-            </p>
-            <a href="#" class="button">View on GitHub</a>
+<header>
+    <!-- <nav>
+        <ul>
+            <li><a href="../../index.html">Home</a></li>
+            <li><a href="../../about.html">About</a></li>
+            <li><a href="../../index.html#projects">Projects</a></li>
+        </ul>
+    </nav> -->
+    <div class="wrapper">
+        <a class="site-title" rel="author">Colorizing the Prokudin-Gorskii Photo Collection</a>
+    </div>
+</header>
+
+<main class="page-content" aria-label="Content">
+    <div class="wrapper">
+        <h1>CS 180: Project 1, Hillary Khuu</h1>
+
+        <section id="overview">
+            <h2>Overview</h2>
+            <p>Prokudin-Gorskii, a Russian photographer and scientist in the early 20th century, pioneered techniques for color photography. He captured the same scene through red, green, and blue filters, with the vision that these separate images could later be combined to form a single color photograph.</p>
+            
+            <div class="image-showcase">
+                <img src="aligned_ncc_0912_basic/tobolsk_pyramid.jpg" alt="tobolsk">
+                <img src="aligned_ncc_0912_basic/monastery_pyramid.jpg" alt="monastery">
+                <img src="aligned_ncc_0912_basic/cathedral_pyramid.jpg" alt="cathedral">
+            </div>
+            <p style="text-align: center;"><i>Examples on smaller jpg images: tobolsk, monastery, and cathedral.</i></p>
+            
+            <p>I want to align these plates to produce a color image. I used an alignment algorithm with L2/Euclidean distance scoring.</p>
         </section>
-    </main>
 
+        <section id="approach">
+            <h2>Approach</h2>
+            <p>My process begins by dividing the initial image into three separate plates representing the red, green, and blue color channels. A preliminary attempt to combine these plates by simply layering them resulted in a distorted image with noticeable color artifacts.
+
+To correct this, I developed a function to find the optimal alignment. The strategy involves keeping the blue plate stationary while shifting the green and red plates to match it. The quality of each alignment is measured by calculating the Euclidean distance between the plates for every possible pixel offset within a search window. The best alignment is the one that yields the minimum distance. While I also experimented with normalized cross-correlation as a metric, it performed poorly in both speed and accuracy.
+
+Initially, my search for the best alignment was exhaustive, checking every possible displacement within a fixed range like [−20,20]. This brute-force method was not only slow but also risked failing on large images where the true displacement might lie outside this limited range.
+
+The key improvement was implementing a recursive image pyramid. This technique starts by aligning low-resolution versions of the plates and uses that result to guide the search on successively higher-resolution versions. This coarse-to-fine strategy drastically reduced the search space, cutting the runtime for large images from many minutes down to under a minute. This advanced method proved powerful enough to correct even difficult images with inconsistent brightness or complex subjects, successfully producing a clear and properly aligned final color image.</p>
+        </section>
+
+        <section id="results">
+            <h2>Results</h2>
+
+            <h3>Low Quality Images (.jpg)</h3>
+            <div class="gallery-container">
+                <div class="gallery-card">
+                    <img src="aligned_ncc_0912_basic/cathedral_pyramid.jpg" alt="cathedral">                    
+                    <div class="card-caption">
+                        <p class="title">Cathedral</p>
+                        <p>Green offset: (5, 2)  Red offset: (12, 3)</p>
+                    </div>
+                </div>
+
+                <div class="gallery-card">
+                    <img src="aligned_ncc_0912_basic/monastery_pyramid.jpg" alt="monastery">
+                    <div class="card-caption">
+                        <p class="title">Monastery</p>
+                        <p>Green offset: (-3, 2)  Red offset: (3, 2)</p>
+                    </div>
+                </div>
+                 <div class="gallery-card">
+                <img src="aligned_ncc_0912_basic/tobolsk_pyramid.jpg" alt="tobolsk">
+                    <div class="card-caption">
+                        <p class="title">Tobolsk</p>
+                        <p>Green offset: (3, 3)  Red offset: (6, 3)</p>
+                    </div>
+                </div>
+            </div>
+
+            <h3>Full Quality Images (.tif)</h3>
+            <div class="gallery-container">
+                <div class="gallery-card">
+                    <img alt="church" src="aligned_ncc_0912_basic/church_pyramid.jpg">
+                    <div class="card-caption">
+                        <p class="title">Church</p>
+                        <p>Green offset: (25, 4)  Red offset: (58, -4)</p>
+                    </div>
+                </div>
+                <div class="gallery-card">
+                    <img alt="emir" src="aligned_ncc_0912_basic/emir_pyramid.jpg">
+                    <div class="card-caption">
+                        <p class="title">Emir</p>
+                        <p>Green offset: (49, 24)  Red offset: (269, -209)</p>
+                        <p></p>
+                    </div>
+                </div>
+                <div class="gallery-card">
+                    <img alt="harvesters" src="aligned_ncc_0912_basic/harvesters_pyramid.jpg">
+                    <div class="card-caption">
+                        <p class="title">Harvesters</p>
+                        <p>Green offset: (60, 17)  Red offset: (124, 13)</p>
+                    </div>
+                </div>
+                <div class="gallery-card">
+                    <img alt="icon" src="aligned_ncc_0912_basic/icon_pyramid.jpg">
+                    <div class="card-caption">
+                        <p class="title">Icon</p>
+                        <p>Green offset: (41, 17)  Red offset: (89, 23)</p>
+                    </div>
+                </div>
+                <div class="gallery-card">
+                    <img alt="lady" src="aligned_ncc_0912_basic/italil_pyramid.jpg">
+                    <div class="card-caption">
+                        <p class="title">Italil</p>
+                        <p>Green offset: (38, 21)  Red offset: (76, 35)</p>
+                    </div>
+                </div>
+                <div class="gallery-card">
+                    <img alt="melons" src="aligned_ncc_0912_basic/melons_pyramid.jpg">
+                    <div class="card-caption">
+                        <p class="title">Melons</p>
+                        <p>Green offset: (82, 11)  Red offset: (178, 13)</p>
+                    </div>
+                </div>
+                <div class="gallery-card">
+                    <img alt="onion" src="aligned_ncc_0912_basic/lastochikino_pyramid.jpg">
+                    <div class="card-caption">
+                        <p class="title">Lastochinkino</p>
+                        <p>(-3, -2)  Red offset: (75, -9)</p>
+                    </div>
+                </div>
+                <div class="gallery-card">
+                    <img alt="lugano" src="aligned_ncc_0912_basic/lugano_pyramid.jpg">
+                    <div class="card-caption">
+                        <p class="title">Lugano</p>
+                        <p>Green offset: (41, -16)  Red offset: (93, -29)</p>
+                    </div>
+                </div>
+                <div class="gallery-card">
+                    <img alt="self portrait" src="aligned_ncc_0912_basic/self_portrait_pyramid.jpg">
+                    <div class="card-caption">
+                        <p class="title">Self-Portrait</p>
+                        <p>Green offset: (79, 29)  Red offset: (176, 37)</p>
+                   
+                    </div>
+                </div>
+                <div class="gallery-card">
+                    <img alt="three gen" src="aligned_ncc_0912_basic/three_generations_pyramid.jpg">
+                    <div class="card-caption">
+                        <p class="title">Three Generations</p>
+                        <p>Green offset: (53, 14)  Red offset: (112, 11)</p>
+                    </div>
+                </div>
+                <div class="gallery-card">
+                    <img alt="siren" src="aligned_ncc_0912_basic/siren_pyramid.jpg">
+                    <div class="card-caption">
+                        <p class="title">Siren</p>
+                        <p>Green offset: (49, -6)  Red offset: (96, -25)</p>
+                    </div>
+                </div>
+            </div>
+
+
+            
+            <h3>Extra Images</h3>
+            <div class="gallery-container">
+                <div class="gallery-card">
+                    <img src="aligned_ncc_0912_basic/pillars_pyramid.jpg" alt="pillars">                    
+                    <div class="card-caption">
+                        <p class="title">Pillars</p>
+                        <p>Green offset: (14, 27)  Red offset: (85, 51)</p>
+                    </div>
+                </div>
+
+                <div class="gallery-card">
+                    <img src="aligned_ncc_0912_basic/boat_pyramid.jpg" alt="boat">
+                    <div class="card-caption">
+                        <p class="title">Boat</p>
+                        <p>Green offset: (42, 39)  Red offset: (134, 81)</p>
+                    </div>
+                </div>
+                 <div class="gallery-card">
+                <img src="aligned_ncc_0912_basic/bridge_pyramid.jpg" alt="bridge">
+                    <div class="card-caption">
+                        <p class="title">Bridge</p>
+                        <p>Green offset: (47, 15)  Red offset: (108, 28)</p>
+                    </div>
+                </div>
+            </div>
+
+
+
+            
+            <h3>Trying to fix Emir by aligning to red and green</h3>
+            <div class="gallery-container">
+                <div class="gallery-card">
+                    <img src="aligned_ncc_0912_basic/emir_pyramid_aligntogreen.jpg" alt="green">                    
+                    <div class="card-caption">
+                        <p class="title">aligned to green</p>
+                        <p> when aliging to green, I noticed it was less blurry than aligining to blue or red</p>
+                    </div>
+                </div>
+
+                <div class="gallery-card">
+                    <img src="aligned_ncc_0912_basic/emir_pyramid_aligntored.jpg" alt="red">
+                    <div class="card-caption">
+                        <p class="title">aligned to red</p>
+                    </div>
+                </div>
+
+            </div>
+        </section>
+
+    </div>
+</main>
 
 </body>
 </html>
