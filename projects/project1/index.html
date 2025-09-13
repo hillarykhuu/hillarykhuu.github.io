@@ -177,8 +177,7 @@
 
         <section id="overview">
             <h2>Overview</h2>
-            <p>Prokudin-Gorskii, a Russian photographer and scientist in the early 20th century, pioneered techniques for color photography. He captured the same scene through red, green, and blue filters, with the vision that these separate images could later be combined to form a single color photograph.</p>
-            
+            <p>Sergei Mikhailovich Prokudin-Gorskii, a Russian chemist and photographer, was a pioneer of color photography and devoted much of his work to capturing life in early 20th-century Russia. His process involved recording three separate exposures of the same scene on a glass plate through red, green, and blue filters. He envisioned that, with the right technology, these exposures could be combined and projected as a full-color image. After he left Russia in 1918, his collection of glass plates was eventually acquired by the Library of Congress and has since been digitized.</p>
             <div class="image-showcase">
                 <img src="aligned_ncc_0912_basic/tobolsk_pyramid.jpg" alt="tobolsk">
                 <img src="aligned_ncc_0912_basic/monastery_pyramid.jpg" alt="monastery">
@@ -186,18 +185,19 @@
             </div>
             <p style="text-align: center;"><i>Examples on smaller jpg images: tobolsk, monastery, and cathedral.</i></p>
             
-            <p>I want to align these plates to produce a color image. I used an alignment algorithm with L2/Euclidean distance scoring.</p>
+            <p>I want to align these plates to produce a color image. I initally used an alignment algorithm with L2 norm/Euclidean distance which is sqrt(sum(sum((image1-image2).^2))). Then, I tried using a NCC (Normalized Cross-Correlation) algorithm, which is a dot product between two normalized vectors: (image1./||image1|| and image2./||image2||).</p>
         </section>
 
         <section id="approach">
             <h2>Approach</h2>
-            <p>My process begins by dividing the initial image into three separate plates representing the red, green, and blue color channels. A preliminary attempt to combine these plates by simply layering them resulted in a distorted image with noticeable color artifacts.
+            <p>My process begins by dividing the initial image into three separate plates representing the red, green, and blue color channels.
 
-To correct this, I developed a function to find the optimal alignment. The strategy involves keeping the blue plate stationary while shifting the green and red plates to match it. The quality of each alignment is measured by calculating the Euclidean distance between the plates for every possible pixel offset within a search window. The best alignment is the one that yields the minimum distance. While I also experimented with normalized cross-correlation as a metric, it performed poorly in both speed and accuracy.
+To correct this, I developed a function to find the optimal alignment. The strategy involves keeping the blue plate stationary while shifting the green and red plates to match it. The quality of each alignment is measured by calculating the Euclidean distance between the plates for every possible pixel offset within a search window. The best alignment is the one that yields the minimum distance. I also experimented with normalized cross-correlation as a metric to see if it would produce better results. For smaller jpgs, the results were similar.
 
-Initially, my search for the best alignment was exhaustive, checking every possible displacement within a fixed range like [−20,20]. This brute-force method was not only slow but also risked failing on large images where the true displacement might lie outside this limited range.
+Initially, I used a brute-force search, checking every possible displacement within a fixed range like [−15,15]. This brute-force method was not only slow but also risked failing on large images where the true displacement might lie outside this limited range.
 
-The key improvement was implementing a recursive image pyramid. This technique starts by aligning low-resolution versions of the plates and uses that result to guide the search on successively higher-resolution versions. This coarse-to-fine strategy drastically reduced the search space, cutting the runtime for large images from many minutes down to under a minute. This advanced method proved powerful enough to correct even difficult images with inconsistent brightness or complex subjects, successfully producing a clear and properly aligned final color image.</p>
+The key improvement was implementing a recursive image pyramid. This technique starts by aligning low-resolution versions of the plates and uses that result to guide the search on successively higher-resolution versions. This strategy drastically reduced the search space, cutting the runtime for large images from many minutes down to under a minute. It resizes or rescales the image by a factor of 2 each time and makes a recursive call until it hits the base case that I set (100x100). This advanced method proved powerful enough to correct difficult images with inconsistent brightness or complex subjects, successfully producing a clear and properly aligned final color image.</p>
+<p>However, I still struggled with aligning emir, which was misaligned despite using the image pyramid technique. For this, I experimented with cropping and aligning to the red and green channels instead of blue. </p>
         </section>
 
         <section id="results">
@@ -243,7 +243,7 @@ The key improvement was implementing a recursive image pyramid. This technique s
                     <div class="card-caption">
                         <p class="title">Emir</p>
                         <p>Green offset: (49, 24)  Red offset: (269, -209)</p>
-                        <p></p>
+                        <p>Unfortunately, Emir is misaligned! Scroll to the bottom of the page to see how I tried aligning to red and green channels. </p>
                     </div>
                 </div>
                 <div class="gallery-card">
@@ -344,22 +344,31 @@ The key improvement was implementing a recursive image pyramid. This technique s
 
             
             <h3>Trying to fix Emir by aligning to red and green</h3>
+            <p>As we can see from the photos above, Emir.tif is the only one that is misaligned. I experimented with changing cropping percentages and aligning to green and red instead of the blue given in the starter code. Here are the results below. The alignment is significantly better when aligning to green.</p>
             <div class="gallery-container">
-                <div class="gallery-card">
-                    <img src="aligned_ncc_0912_basic/emir_pyramid_aligntogreen.jpg" alt="green">                    
-                    <div class="card-caption">
-                        <p class="title">aligned to green</p>
-                        <p> when aliging to green, I noticed it was less blurry than aligining to blue or red</p>
-                    </div>
-                </div>
 
                 <div class="gallery-card">
                     <img src="aligned_ncc_0912_basic/emir_pyramid_aligntored.jpg" alt="red">
                     <div class="card-caption">
-                        <p class="title">aligned to red</p>
+                        <p class="title">Aligned to red</p>
+                        <p>Still a bit blurry! (and stacked in the wrong order, as you can see in the middle image)</p>
+                    </div>
+                </div>
+                <div class="gallery-card">
+                    <img src="aligned_ncc_0912_basic/emir_pyramid_aligntogreen.jpg" alt="green">                    
+                    <div class="card-caption">
+                        <p class="title">First try of aligning to green</p>
+                        <p> When aligning to green, I noticed it was less blurry than aligining to blue or red. However, it still isn't quite the right color. Why? I had put the incorrect order for np.stack! I put it in BGR instead of RGB - woops.</p>
                     </div>
                 </div>
 
+                <div class="gallery-card">
+                    <img src="aligned_ncc_0912_basic/emir_pyramid_algin_green_corrrect.jpg" alt="green">                    
+                    <div class="card-caption">
+                        <p class="title">Finally aligning to green!</p>
+                        <p> Correct order - RGB!</p>
+                    </div>
+                </div>
             </div>
         </section>
 
