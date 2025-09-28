@@ -273,15 +273,23 @@ Dx represents the Derivative filter for finding edges along the x-axis.</p>
             </p>
             <p>Sharpened Image=Original Image+α(Original Image−Low-pass Filtered Image)</p>
             <p>First, the code loads an image and separates it into its individual red, green, and blue color channels. For each channel, it creates a blurry version by applying a Gaussian blur. It then isolates the image's "details" (the sharp edges and textures) by subtracting the blurry version from the original channel. The key step is to then amplify these extracted details by multiplying them by a sharpening factor, alpha, and add them back to the original channel. After performing this process on all three color channels independently, the code stitches the sharpened channels back together to create the final, crisper color image.</p>
-            <h4>Taj Mahal Example</h4>
+            <h4>Taj Mahal Example with varying sharpening amounts (alphas)</h4>
             <div class="image-grid">
 
                 <figure  class="grid-item-full-width"> 
-                    <img src="images/taj_sharp.png" alt="Sharpened Taj Mahal">
+                    <img src="images\taj_all.png" alt="Sharpened Taj Mahal">
                     <figcaption>Final sharpened result. alpha = 1.5, sigma = 2.0</figcaption>
                 </figure>
                 <figure  class="grid-item-full-width"> 
-                    <img src="images\warthog_sharp.png" alt="">
+                    <img src="images\taj_alpha_01.png" alt="Sharpened Taj Mahal">
+                    <figcaption>Final sharpened result. alpha = 0.1, sigma = 2.0</figcaption>
+                </figure>
+                                <figure  class="grid-item-full-width"> 
+                    <img src="images\taj_alpha5.png" alt="Sharpened Taj Mahal">
+                    <figcaption>Final sharpened result. alpha = 5.0, sigma = 2.0. SUPER FRIED! As we can see, varying the alpha indeed makes a significant difference in the final image result. Extremely high alpha amplifies the higher frequencies. Too high of an alpha can make it look grainy. </figcaption>
+                </figure>
+                <figure  class="grid-item-full-width"> 
+                    <img src="images\warthog_all.png" alt="">
                     <figcaption>warthog. alpha = 1.5, sigma = 2.0. The sharpening effect is noticeable on its horn, head, and upper back. However, the motion blur is hard to sharpen.</figcaption>
 
                 </figure>
@@ -289,6 +297,7 @@ Dx represents the Derivative filter for finding edges along the x-axis.</p>
                     <img src="images/purple_flower_7.png" alt="">
                     <figcaption>purple flowers. sharp -> blur -> sharpen. alpha = 1.5, sigma_blur = 7.0, sigma (for sharpen) = 9.0. Sharpening won't fully restore the image, however we can see it's details better than in the blurred version.</figcaption>
                 </figure>
+                <p> Side note: This was a fun exercise as I got to try many pictures. Unfortunately, the sharpening effect didn't work on some images, so I didn't display them here. I spent quite a while trying to sharpen an image of a penguin on a rock and it didn't work.</p>
             </div>
 
             <h3>2.2: Hybrid Images</h3>
