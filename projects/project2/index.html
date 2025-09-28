@@ -235,31 +235,61 @@ def my_convolve2d(image, kernel):
                 Hybrid images combine the low frequencies of one image with the high frequencies of another, creating an image that is interpreted differently depending on the viewing distance.
             </p>
             <h4>Favorite Hybrid Example & Frequency Analysis</h4>
+            <p>I used a low pass filter for Derek and a high pass filter for Nutmeg the cat. I experimented and found a sigma of 3 or 4 for the cat alongside a sigma of 10 for Derek gave good results.</p>
+            <p>Selecting good points is also very important for the alignment. For the hummingbirds, I tried multiple alignments such as eye to beak, wing to wing, and wing to feet. The one that worked best was aligning the wing to feet.</p>
             <div class="image-grid">
                 <figure>
-                    <img src="https://via.placeholder.com/300x300" alt="Original Image 1">
+                    <img src="images\DerekPicture.jpg" alt="Original Image 1">
                     <figcaption>Original Image 1 (Low Pass).</figcaption>
                 </figure>
                 <figure>
-                    <img src="https://via.placeholder.com/300x300" alt="Original Image 2">
+                    <img src="images/nutmeg.jpg" alt="Original Image 2">
                     <figcaption>Original Image 2 (High Pass).</figcaption>
                 </figure>
                 <figure>
-                    <img src="https://via.placeholder.com/300x300" alt="Hybrid Image">
-                    <figcaption>Final Hybrid Image.</figcaption>
+                    <img src="images\cat_david_hybrid_3_10.png" alt="Hybrid Image">
+                    <figcaption>sigma1=3 (cat), sigma2=10 (david).</figcaption>
                 </figure>
                 <figure>
-                    <img src="https://via.placeholder.com/250x250" alt="FFT of Image 1">
-                    <figcaption>FFT of Low-pass Image.</figcaption>
+                    <img src="images\cat_david_hybrid_4_10.png" alt="Hybrid Image">
+                    <figcaption>sigma1=4 (cat), sigma2=10 (david).</figcaption>
+                </figure>
+                
+                <figure>
+                    <img src="images/jellyfish.jpg" alt="Original Image 1">
+                    <figcaption>Original Image 1 (Low Pass).</figcaption>
                 </figure>
                 <figure>
-                    <img src="https://via.placeholder.com/250x250" alt="FFT of Image 2">
-                    <figcaption>FFT of High-pass Image.</figcaption>
+                    <img src="images/jellychandelier_.jpg" alt="Original Image 2">
+                    <figcaption>Original Image 2 (High Pass).</figcaption>
                 </figure>
                 <figure>
-                    <img src="https://via.placeholder.com/250x250" alt="FFT of Hybrid">
-                    <figcaption>FFT of Hybrid Image.</figcaption>
+                    <img src="images/jellylier_result.png" alt="Hybrid Image">
+                    <figcaption>Final Hybrid Image. For the jellychandelier, I used  sigma1=5, sigma2=4 and I put im1 as the jellyfish and im2 as the chandelier. </figcaption>
                 </figure>
+                
+                
+                <figure>
+                    <img src="images/hummingbird_rela.jpg" alt="Original Image 1">
+                    <figcaption>Original Image 1 (Low Pass).</figcaption>
+                </figure>
+                <figure>
+                    <img src="images/humingbird_flower.jpg" alt="Original Image 2">
+                    <figcaption>Original Image 2 (High Pass).</figcaption>
+                </figure>
+                <figure>
+                    <img src="images/humingbird_3_wingtofeet.png" alt="Hybrid Image">
+                    <figcaption>Final Hybrid Image. For the hummingbirds, I used  sigma1=5, sigma2=4 with im1 being the hummingbird and im2 being the hummingbird shaped flower.</figcaption>
+                </figure>
+                <figure class="grid-item-full-width">
+                    <img src="images/humingbird_high_low_pass_filters.png" alt="FFT of Image 1">
+                    <figcaption>High-pass filtered and low-pass filtered.</figcaption>
+                </figure>
+                <figure class-="grid-item-full-width">
+                    <img src="images/humingbird_FFT_original_hybird.png" alt="FFT of Image 2">
+                    <figcaption>FFTs of Original High-pass, Original Low-pass, and Hybrid Image.</figcaption>
+                </figure>
+
             </div>
             
             <h3>2.3 & 2.4: Gaussian/Laplacian Stacks & Multiresolution Blending</h3>
@@ -310,7 +340,7 @@ Finally, the collapse_pyramid function reconstructs the final image from this ne
 
             <h4>Custom Blended Images</h4>
             <h5>Custom Blend 1: Camrolla </h5>
-            <p>For my second custom image, I chose to blend two of my favorite animals: a quokka and a penguin. Together, these make the Quenguin. I decided to use an ellipsis shape for my mask and switch out their heads. The images I found online were in different dimensions, so I used Canva to resize them to the same dimension. Then I created the mask by resizing the ellipsis on the quokka’s face. As you can see in my first try, this wasn’t a good choice because the quokka’s face is larger than the penguin’s, so the transparent background leaked through, leading to an ugly blend. I revisited my ellipsis design and instead made it the shape of the penguin’s head. This result is much cuter!</p>
+            <p>For my first custom image, I decided to combine two of my favorite cars: a 2020 Corolla and a 2001 Camry. However, it was difficult to find images of the 2001 Camry in the color, angle, and background that I wanted. Additionally, when aligning the cars, the result looked funky since the shape of the 2001 Camry model is longer and shorter than the more modern 2020 Corolla. To have a better blended effect, I then changed to using images of the latest models of the Corolla and Camry. I used a line to blend, and my output is a Camrolla!</p>
             <div class="image-grid">
                 <figure>
                     <img src="images/camry.png" alt="Camry">
@@ -331,7 +361,7 @@ Finally, the collapse_pyramid function reconstructs the final image from this ne
             </div>
             
             <h5>Custom Blend 2 with Irregular Mask: quenguino</h5>
-            <p>For my second custom image, I blended a quokka and a penguin using an irregular elliptical mask to create the "Quenguin."</p>
+            <p>For my second custom image, I chose to blend two of my favorite animals: a quokka and a penguin. Together, these make the Quenguin. I decided to use an ellipsis shape for my mask and switch out their heads. The images I found online were in different dimensions, so I used Canva to resize them to the same dimension. Then I created the mask by resizing the ellipsis on the quokka’s face. As you can see in my first try, this wasn’t a good choice because the quokka’s face is larger than the penguin’s, so the transparent background leaked through, leading to an ugly blend. I revisited my ellipsis design and instead made it the shape of the penguin’s head. This result is much cuter!</p>
             <div class="image-grid">
                 <figure>
                     <img src="images/quokka.png" alt="Quokka">
