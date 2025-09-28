@@ -5,19 +5,14 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Project 2: Filters and Frequencies</title>
     <link rel="stylesheet" href="../../css/style.css">
+
     <style>
-        /* --- UPDATED CLEANER CSS --- */
         body {
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
             line-height: 1.6;
             background-color: #f8f9fa;
             color: #333;
             margin: 0;
-        }
-        header {
-            background-color: #fff;
-            padding: 10px 0;
-            border-bottom: 1px solid #e9ecef;
         }
         nav ul {
             max-width: 1200px;
@@ -122,57 +117,115 @@
 
             <h3>1.1: Convolutions from Scratch!</h3>
             <p>
-                I implemented a 2D convolution function from scratch using NumPy. The process involves sliding a kernel over the image and computing the dot product at each location. I implemented padding to ensure the output image maintained the same dimensions as the input. Below is a comparison between my implementation and SciPy's built-in `convolve2d` function.
+                I implemented a 2D convolution function from scratch using NumPy. The process involves sliding a kernel over the image and computing the dot product at each location. I implemented padding to ensure the output image maintained the same dimensions as the input. 
+                <br>
+                Convolution performed using scipy.signal.convolve2d: 0.1s <br>
+                convolution2: 2.8s <br>
+convolution4: 21.2s <br>
+                As we can see, the built in convolve2d is significantly faster. The difference in time for the 4 loop is also significantly longer than the 2 loop implementation by 20 seconds.
+                <br>
+                For boundary handling, my custom functions use zero padding on the borders. convolve2d has a boundary parameter where you can choose "fill", "sym", or "wrap". Based on visually inspecting my images in my notebook, I did not notice a difference in the boundaries of the outputs.
+
             </p>
-            <h4>My Convolution Code Snippet</h4>
+            <h4>My Convolution Code: 4 loops and 2 loops</h4>
             <pre><code>
-# Your Python code for convolution here
-def my_convolve2d(image, kernel):
-    # ... implementation details ...
-    # Handle padding, loops, etc.
-    return output_image
+def convolution4(image, filter):
+    # add padding 0s on every side of the image by appending arrays
+    # 4 for loops
+
+    img_height, img_width = image.shape
+    filter_height, filter_width = filter.shape
+
+    pad_height = filter_height // 2
+    pad_width = filter_width // 2
+
+    padded_image = np.zeros((img_height + 2 * pad_height, img_width + 2 * pad_width))
+    padded_image[pad_height:pad_height + img_height, pad_width:pad_width + img_width] = image
+
+    out = np.zeros_like(image)
+
+    # naive imp goes thru every pixel in out, elem wise sum & *multiply
+    for y in range(img_height):
+        for x in range(img_width):
+            current_sum = 0
+            for ky in range(filter_height):
+                for kx in range(filter_width):
+                    # map to ppadded image
+                    img_y = y + ky
+                    img_x = x + kx
+                    current_sum += padded_image[img_y, img_x] * filter[ky, kx]
+            out[y, x] = current_sum
+            
+    return out
+################################################################################################
+def convolution2(image, filter):
+    out = np.zeros_like(image)
+    img_height, img_width = image.shape
+    filter_h, filter_w = filter.shape
+    image_padded = np.zeros((image.shape[0] + 2, image.shape[1] + 2))
+    image_padded[1:-1, 1:-1] = image
+
+    pad_h = filter_h // 2
+    pad_w = filter_w // 2
+
+    image_padded = np.zeros((img_height + 2 * pad_h, img_width + 2 * pad_w))
+    image_padded[pad_h:-pad_h, pad_w:-pad_w] = image
+
+    out = np.zeros_like(image)
+    
+    # flip fiter/kenrel
+    flipped_filter = np.flipud(np.fliplr(filter))
+
+    for y in range(img_height):
+        for x in range(img_width):
+            patch = image_padded[y : y + filter_h, x : x + filter_w]
+            out[y, x] = (flipped_filter * patch).sum()
+            
+    return out
             </code></pre>
             
             <h4>Results</h4>
             <div class="image-grid">
                 <figure>
-                    <img src="https://via.placeholder.com/300x400" alt="My grayscale self-portrait">
+                    <img src="images/hillary_graypng.png" alt="My grayscale self-portrait">
                     <figcaption>Original grayscale image of me.</figcaption>
                 </figure>
                 <figure>
-                    <img src="https://via.placeholder.com/300x400" alt="Image convolved with box filter">
+                    <img src="images/hillary_blurred.jpg" alt="Image convolved with box filter">
                     <figcaption>Image after convolution with a 9x9 box filter.</figcaption>
                 </figure>
-                <figure>
-                    <img src="https://via.placeholder.com/300x400" alt="Image convolved with Dx">
-                    <figcaption>Image convolved with the Dx finite difference operator.</figcaption>
+                <figure class="grid-item-full-width">
+                    <img src="images/hillary_gradient_mag.png" alt="Image convolved with Dx">
+                    <figcaption>Image convolved with the Dx and Dy finite difference operator. Gradient edge magnitude.</figcaption>
                 </figure>
-                <figure>
-                    <img src="https://via.placeholder.com/300x400" alt="Image convolved with Dy">
-                    <figcaption>Image convolved with the Dy finite difference operator.</figcaption>
-                </figure>
+
             </div>
 
             <h3>1.2: Finite Difference Operator</h3>
             <p>
-                Using the finite difference operators $D_x$ and $D_y$, I computed the partial derivatives of the cameraman image. The gradient magnitude was then calculated. To create a clean edge image, I binarized the gradient magnitude by selecting a threshold to suppress noise while preserving the main structural edges.
+                Using the finite difference operators Dx = [1, 0, -1] and Dy = [1 0 -1], I computed the partial derivatives of the cameraman image. The gradient magnitude was then calculated. To create a clean edge image, I binarized the gradient magnitude by selecting a threshold to suppress noise while preserving the main structural edges.
             </p>
             <div class="image-grid">
                 <figure>
-                    <img src="https://via.placeholder.com/256x256" alt="Partial derivative in x">
-                    <figcaption>Partial derivative in x ($I*D_x$).</figcaption>
+                    <img src="images/cameraman.png" alt="Partial derivative in y">
+                    <figcaption>Original</figcaption>
+                </figure>
+                <figure class="grid-item-full-width">
+                    <img src="images/cameraman_dxdy_edgepng.png" alt="Partial derivative in x">
+                    <figcaption>Dx, Dy filters and Gradient magnitude.</figcaption>
+                </figure>
+
+                <figure>
+                    <img src="images/camera_25.png" alt="Gradient magnitude">
+                    <figcaption>Gradient magnitude = 0.25</figcaption>
                 </figure>
                 <figure>
-                    <img src="https://via.placeholder.com/256x256" alt="Partial derivative in y">
-                    <figcaption>Partial derivative in y ($I*D_y$).</figcaption>
+                    <img src="images/camera_01.png" alt="Gradient magnitude">
+                    <figcaption>Gradient magnitude = 0.10 </figcaption>
                 </figure>
                 <figure>
-                    <img src="https://via.placeholder.com/256x256" alt="Gradient magnitude">
-                    <figcaption>Gradient magnitude.</figcaption>
-                </figure>
-                <figure>
-                    <img src="https://via.placeholder.com/256x256" alt="Binarized edge image">
-                    <figcaption>Binarized edge image.</figcaption>
+                    <img src="images/camera_015.png" alt="Binarized edge image">
+                    <figcaption>Gradient magnitude = 0.15. Binarized edge image.</figcaption>
                 </figure>
             </div>
 
@@ -180,26 +233,33 @@ def my_convolve2d(image, kernel):
             <p>
                 To reduce noise, I first smoothed the image with a Gaussian filter and then applied the finite difference operators. A more efficient approach is to convolve the Gaussian filter with the difference operators first, creating Derivative of Gaussian (DoG) filters.
             </p>
+            <p>The magnitude of the gradient can be calculated by taking the square root of the sum of the squares of the partial derivatives:</p>
+            <p> Here, we first blur the image with a 2D Gaussian filter and then apply the derivative operators to the blurred result. This is the (I * G) * Dx approach where I represents the input Image.
+
+G represents the Gaussian filter used for smoothing/blurring which the image is convolved with.
+
+Dx represents the Derivative filter for finding edges along the x-axis.</p>
             <div class="image-grid">
                 <figure>
-                    <img src="https://via.placeholder.com/256x256" alt="Blurred cameraman">
+                    <img src="images/cameraman_gaussian.jpg" alt="Blurred cameraman">
                     <figcaption>Cameraman blurred with a Gaussian filter.</figcaption>
                 </figure>
-                <figure>
-                    <img src="https://via.placeholder.com/256x256" alt="Edges from blurred image">
+                <figure class="grid-item-full-width"> 
+                    <img src="images/camera_dog_dxdx.png" alt="Edges from blurred image">
                     <figcaption>Edges from the blurred image.</figcaption>
                 </figure>
-                <figure>
-                    <img src="https://via.placeholder.com/256x256" alt="Edges using DoG">
-                    <figcaption>Edges found using the single DoG filter.</figcaption>
+                <figure class="grid-item-full-width">
+                    <img src="images/camera_dog_gradient.png" alt="Edges using DoG">
+                    <figcaption> Comparison of Edges found using the 1D vs 2D DoG filter.</figcaption>
+                <p> We can observe that the edges with the 2D DoG filter are much more defined. The outline is darker.  </p>
                 </figure>
-                 <figure>
-                    <img src="https://via.placeholder.com/150x150" alt="DoG filter in x">
-                    <figcaption>DoG filter ($D_x*G$).</figcaption>
+                 <figure class="grid-item-full-width">
+                    <img src="images/dog_filters.png" alt="DoG filter in x">
+                    <figcaption>DoG filters.</figcaption>
                 </figure>
-                <figure>
-                    <img src="https://via.placeholder.com/150x150" alt="DoG filter in y">
-                    <figcaption>DoG filter ($D_y*G$).</figcaption>
+                <figure class="grid-item-full-width">
+                    <img src="images/dog_verifedt.png" alt="DoG filter in x">
+                    <figcaption>DoG filters verified - same result!</figcaption>
                 </figure>
             </div>
         </section>
@@ -222,7 +282,8 @@ def my_convolve2d(image, kernel):
                 </figure>
                 <figure  class="grid-item-full-width"> 
                     <img src="images\warthog_sharp.png" alt="">
-                    <figcaption>warthog. alpha = 1.5, sigma = 2.0</figcaption>
+                    <figcaption>warthog. alpha = 1.5, sigma = 2.0. The sharpening effect is noticeable on its horn, head, and upper back. However, the motion blur is hard to sharpen.</figcaption>
+
                 </figure>
                 <figure  class="grid-item-full-width"> 
                     <img src="images/purple_flower_7.png" alt="">
@@ -235,8 +296,11 @@ def my_convolve2d(image, kernel):
                 Hybrid images combine the low frequencies of one image with the high frequencies of another, creating an image that is interpreted differently depending on the viewing distance.
             </p>
             <h4>Favorite Hybrid Example & Frequency Analysis</h4>
-            <p>I used a low pass filter for Derek and a high pass filter for Nutmeg the cat. I experimented and found a sigma of 3 or 4 for the cat alongside a sigma of 10 for Derek gave good results.</p>
+            <p>I used a low pass filter for Derek and a high pass filter for Nutmeg the cat. I experimented and found a sigma of 3 or 4 for the cat alongside a sigma of 10 for Derek gave good results. I found that grayscale images produced better results, as significant differences in color and brightness between the source images can make the final hybrid look strange. I converted the images to grayscale before processing and filtering.</p>
             <p>Selecting good points is also very important for the alignment. For the hummingbirds, I tried multiple alignments such as eye to beak, wing to wing, and wing to feet. The one that worked best was aligning the wing to feet.</p>
+            <p>For the first image (im1), we keep only its sharp details and textures. To do this, create a blurry copy using a Gaussian blur and subtract this blurry copy from the original image. What's left over (high_pass_im) is just the sharp lines and edges which is the "high-frequency" information.</p>
+            <p>For the second image (im2), we apply a Gaussian blur to get rid of all the fine details, leaving only the blurry, low-resolution shapes and colors which is the "low-frequency" information.</p>
+            <p>The final hybrid image is created by simply adding the "details" from the first image to the "blurry base" of the second. When you look at the result up close, your eyes pick up on the sharp details. </p>
             <div class="image-grid">
                 <figure>
                     <img src="images\DerekPicture.jpg" alt="Original Image 1">
@@ -265,7 +329,8 @@ def my_convolve2d(image, kernel):
                 </figure>
                 <figure>
                     <img src="images/jellylier_result.png" alt="Hybrid Image">
-                    <figcaption>Final Hybrid Image. For the jellychandelier, I used  sigma1=5, sigma2=4 and I put im1 as the jellyfish and im2 as the chandelier. </figcaption>
+                    <figcaption>Final Hybrid Image.  </figcaption>
+                    <p> For the jellychandelier, I used  sigma1=5, sigma2=4 and I put im1 as the jellyfish and im2 as the chandelier.</p>
                 </figure>
                 
                 
@@ -279,17 +344,18 @@ def my_convolve2d(image, kernel):
                 </figure>
                 <figure>
                     <img src="images/humingbird_3_wingtofeet.png" alt="Hybrid Image">
-                    <figcaption>Final Hybrid Image. For the hummingbirds, I used  sigma1=5, sigma2=4 with im1 being the hummingbird and im2 being the hummingbird shaped flower.</figcaption>
+                    <figcaption>Final Hybrid Image. </figcaption>
+                    <p> For the hummingbirds, I used  sigma1=5, sigma2=4 with im1 being the hummingbird and im2 being the hummingbird shaped flower. </p>
+
                 </figure>
                 <figure class="grid-item-full-width">
                     <img src="images/humingbird_high_low_pass_filters.png" alt="FFT of Image 1">
-                    <figcaption>High-pass filtered and low-pass filtered.</figcaption>
+                    <figcaption>hummingbird: FFTs High-pass filtered and low-pass filtered.</figcaption>
                 </figure>
-                <figure class-="grid-item-full-width">
+                <figure class="grid-item-full-width">
                     <img src="images/humingbird_FFT_original_hybird.png" alt="FFT of Image 2">
-                    <figcaption>FFTs of Original High-pass, Original Low-pass, and Hybrid Image.</figcaption>
+                    <figcaption>hummingbird: FFTs of Original High-pass, Original Low-pass, and Hybrid Image.</figcaption>
                 </figure>
-
             </div>
             
             <h3>2.3 & 2.4: Gaussian/Laplacian Stacks & Multiresolution Blending</h3>
@@ -361,7 +427,7 @@ Finally, the collapse_pyramid function reconstructs the final image from this ne
             </div>
             
             <h5>Custom Blend 2 with Irregular Mask: quenguino</h5>
-            <p>For my second custom image, I chose to blend two of my favorite animals: a quokka and a penguin. Together, these make the Quenguin. I decided to use an ellipsis shape for my mask and switch out their heads. The images I found online were in different dimensions, so I used Canva to resize them to the same dimension. Then I created the mask by resizing the ellipsis on the quokka’s face. As you can see in my first try, this wasn’t a good choice because the quokka’s face is larger than the penguin’s, so the transparent background leaked through, leading to an ugly blend. I revisited my ellipsis design and instead made it the shape of the penguin’s head. This result is much cuter!</p>
+            <p>For my second custom image, I chose to blend two of my favorite animals: a quokka and a penguin. Together, these make the Quenguino. I decided to use an ellipsis shape for my mask and switch out their heads. The images I found online were in different dimensions, so I used Canva to resize them to the same dimension. Then I created the mask by resizing the ellipsis on the quokka’s face. As you can see in my first try, this wasn’t a good choice because the quokka’s face is larger than the penguin’s, so the transparent background leaked through, leading to an ugly blend. I revisited my ellipsis design and instead made it the shape of the penguin’s head. This result is much cuter!</p>
             <div class="image-grid">
                 <figure>
                     <img src="images/quokka.png" alt="Quokka">
@@ -389,7 +455,7 @@ Finally, the collapse_pyramid function reconstructs the final image from this ne
         <section>
             <h2>What I Learned</h2>
             <p>
-                The most important thing I learned from this project was how fundamentally important frequency-domain thinking is for image processing. What seems like a complex spatial operation can often be understood more intuitively as manipulating low and high frequencies. It was fascinating to see how separating an image into its constituent frequency bands allows for powerful and seamless edits.
+This was definitely a challenging project for me, but I learned a lot. My favorite parts of the project were the hybrid images and oraple. Before this project, I didn’t have a clear idea of the role frequencies play in how images appear. When I created algorithms to remove and isolate higher frequencies or lower frequencies and plotted the images, the effects became more clear to me than just describing it as a “blur” or “sharp”. The project also made me think creatively, and I’m very proud of the hummingbird hybrid alignment. The section on the oraple helped solidify my understanding of Laplacian and Gaussian pyramids and how they can work together. I also enjoyed getting to make my own filter and mixing two animals. Throughout the project one thing that I struggled with was ensuring dimensions and colors/format were correct when preprocessing the images. I had to debug many value errors but that gave me a better understanding of how the functions work together to pass and process the images and pixels.
             </p>
         </section>
 
