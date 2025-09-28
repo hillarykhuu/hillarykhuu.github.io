@@ -211,19 +211,22 @@ def my_convolve2d(image, kernel):
             <p>
                 Image sharpening can be achieved using an unsharp mask filter. This technique works by creating a blurred (low-frequency) version of the image and subtracting it from the original to get the high-frequency details, which are then added back to the original image.
             </p>
+            <p>Sharpened Image=Original Image+α(Original Image−Low-pass Filtered Image)</p>
+            <p>First, the code loads an image and separates it into its individual red, green, and blue color channels. For each channel, it creates a blurry version by applying a Gaussian blur. It then isolates the image's "details" (the sharp edges and textures) by subtracting the blurry version from the original channel. The key step is to then amplify these extracted details by multiplying them by a sharpening factor, alpha, and add them back to the original channel. After performing this process on all three color channels independently, the code stitches the sharpened channels back together to create the final, crisper color image.</p>
             <h4>Taj Mahal Example</h4>
             <div class="image-grid">
-                <figure>
-                    <img src="https://via.placeholder.com/400x267" alt="Blurry Taj Mahal">
-                    <figcaption>Original blurry image.</figcaption>
+
+                <figure  class="grid-item-full-width"> 
+                    <img src="images/taj_sharp.png" alt="Sharpened Taj Mahal">
+                    <figcaption>Final sharpened result. alpha = 1.5, sigma = 2.0</figcaption>
                 </figure>
-                <figure>
-                    <img src="https://via.placeholder.com/400x267" alt="High frequencies of Taj Mahal">
-                    <figcaption>High-frequency details (Original - Blurred).</figcaption>
+                <figure  class="grid-item-full-width"> 
+                    <img src="images\warthog_sharp.png" alt="">
+                    <figcaption>warthog. alpha = 1.5, sigma = 2.0</figcaption>
                 </figure>
-                <figure>
-                    <img src="https://via.placeholder.com/400x267" alt="Sharpened Taj Mahal">
-                    <figcaption>Final sharpened result.</figcaption>
+                <figure  class="grid-item-full-width"> 
+                    <img src="images/purple_flower_7.png" alt="">
+                    <figcaption>purple flowers. sharp -> blur -> sharpen. alpha = 1.5, sigma_blur = 7.0, sigma (for sharpen) = 9.0. Sharpening won't fully restore the image, however we can see it's details better than in the blurred version.</figcaption>
                 </figure>
             </div>
 
@@ -261,8 +264,13 @@ def my_convolve2d(image, kernel):
             
             <h3>2.3 & 2.4: Gaussian/Laplacian Stacks & Multiresolution Blending</h3>
             <p>
-                Multiresolution blending seamlessly stitches two images by decomposing them into frequency bands using a Laplacian stack, combining them at each level with a soft mask, and then reconstructing the final image.
+                Multiresolution blending stitches two images by decomposing them into frequency bands using a Laplacian stack, combining them at each level with a soft mask, and then reconstructing the final image.
             </p>
+            <p>Here, we merge two images using a mask. Instead of working with the images directly, this method decomposes them into different frequency bands, allowing for a much smoother and more natural transition.
+The fundamental concept relies on two types of image pyramids. First, a Gaussian pyramid is constructed for an image by repeatedly blurring and downsampling it. This creates a multi-level stack of images, each representing a lower-frequency (blurrier) version of the one before it. From this, a Laplacian pyramid is created, which stores the high-frequency details (like edges and textures) by calculating the difference between adjacent levels of the Gaussian pyramid. In essence, this separates the broad colors and shapes of an image from its fine details.
+The main blend_images function orchestrates the entire process. After preparing the input images to ensure they are the same size and format, it builds a Laplacian pyramid for each of the two source images.It also builds a Gaussian pyramid for the blending mask. Using a blurred, multi-scale mask is the key to the seamless effect, as it ensures the transition is gradual at every frequency level. The code then creates a new, blended Laplacian pyramid by combining the levels from the two source pyramids according to the corresponding blurred mask level.
+Finally, the collapse_pyramid function reconstructs the final image from this newly created blended pyramid. It works in reverse, starting with the smallest, blurriest image at the pyramid's base and iteratively upsampling it while adding back the combined detail information from each level. This process continues until the full-resolution, seamlessly blended image is formed. </p>
+
             
             <h4>"Oraple" Blending Process</h4>
             <div class="image-grid">
