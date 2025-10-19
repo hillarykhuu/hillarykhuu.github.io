@@ -8,8 +8,7 @@
 
     <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
 
-    <style>
-        /* General Body and Typography */
+    <style>        
         body {
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
             line-height: 1.6;
@@ -30,7 +29,6 @@
             margin-top: 40px;
         }
 
-        /* Navigation */
         nav ul {
             max-width: 1200px;
             margin: 0 auto;
@@ -38,17 +36,15 @@
             list-style: none;
             display: flex;
             gap: 20px;
-            background-color: #fff;
-            border-bottom: 1px solid #e9ecef;
+            justify-content: center;
         }
+
 
         nav a {
             text-decoration: none;
             color: #007bff;
             font-weight: 500;
         }
-
-        /* Code Blocks */
         pre {
             background-color: #f4f4f4;
             border: 1px solid #ddd;
@@ -63,7 +59,6 @@
             font-family: "SF Mono", "Fira Code", "Courier New", Courier, monospace;
         }
 
-        /* Image Grids */
         .image-grid, .grid-container {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
@@ -107,7 +102,6 @@
             grid-column: 1 / -1;
         }
 
-        /* Button */
         .button {
             display: inline-block;
             background-color: #007bff;
@@ -121,6 +115,7 @@
 </head>
 <body>
     <header>
+        
         <nav>
             <ul>
                 <li><a href="../../index.html">Home</a></li>
@@ -133,10 +128,36 @@
     <main>
         <h1>Part A: Image Warping and Mosaicing</h1>
         <h2>Overview</h2>
-        <p>In this project, I used multiple photographs to create image mosaics by registering, projective warping, and resampling them. I computed homographies to warp images!</p>
+        <p>In this project, I used multiple photographs to create image mosaics by registering, projective warping, and resampling them. I computed homographies to warp images. Later in part B, I learned to create algorithms like ANMS and RANSAC which are applied to creating mosiacs automatically as opposed to hand selecting points.</p>
         
-        <h2>Part A.1</h2>
-        <p>To capture photos that blend well, we require transforms between them are projective (a.k.a. perspective) by fixing the center of projection and rotating my camera while capturing photos.</p>
+
+        <h2>Part A.1: Image Acquisition</h2>
+        <p>
+            To create a mosaic, we need images that share a projective transformation. I captured these by fixing my camera's center of projection (keeping the camera in one spot) and rotating it to capture overlapping scenes. I ensured there was about 50-70% overlap between images to make registration easier.
+        </p>
+        
+        <h3>Image Set 1: Stairs </h3>
+        <div class="image-grid">
+            <figure><img src="images/stair1.jpg" alt="Image Set 1, Photo 1"><figcaption>Left</figcaption></figure>
+            <figure><img src="images/stair2.jpg" alt="Image Set 1, Photo 2"><figcaption>Center</figcaption></figure>
+            <figure><img src="images/stair3.jpg" alt="Image Set 1, Photo 3"><figcaption>Right</figcaption></figure>
+        </div>
+
+        <h3>Image Set 2: NERDS </h3>
+        <div class="image-grid">
+            <figure><img src="images/nerd1.jpg" alt="Image Set 2, Photo 1"><figcaption>Left</figcaption></figure>
+            <figure><img src="images/nerd2.jpg" alt="Image Set 2, Photo 2"><figcaption>Right</figcaption></figure>
+        </div>
+
+        <h3>Image Set 3: Gazebo</h3>
+        <div class="image-grid">
+            <figure><img src="images/trellis_left1.jpg" alt="Image Set 1, Photo 1"><figcaption>Left</figcaption></figure>
+            <figure><img src="images/trellis_mid2.jpg" alt="Image Set 1, Photo 2"><figcaption>Center</figcaption></figure>
+            <figure><img src="images/trellis_right3.jpg" alt="Image Set 1, Photo 3"><figcaption>Right</figcaption></figure>
+        </div>
+
+
+        <h2>Part A.2: Homography Calculation</h2> <p>To capture photos that blend well, we require transforms between them are projective (a.k.a. perspective) by fixing the center of projection and rotating my camera while capturing photos.</p>
         <p>A homography is a projective transformation between two planes</p>
         <p>The transformation can be shown by H, a 3x3 matrix H:</p>
         $$ H \cdot p_{\text{original}} = p_{\text{transformed}} $$
@@ -146,35 +167,173 @@
         <p>We solve this with a least-squares to find the minimum norm solution with more than four points. We want more points than the min 4 in order to make our homography recovery more robust against noise.</p>
                 <div class="image-grid">
             <figure><img src="images/stair_cor.png" alt=""><figcaption>Original Image -> Correspondences</figcaption></figure>
-            <!-- <figure><img src="./img/ad_pts.jpg" alt="Subway ad with points"><figcaption></figcaption></figure>
-            <figure><img src="./img/ad_rectified.jpg" alt="Rectified subway ad"><figcaption></figcaption></figure> -->
-        </div>
+            </div>
+        <p>Homography Matrix H for the stairs:</p>
+<pre>
+[[ 1.45281512e+00  4.04663193e-02 -1.62815211e+03]
+ [ 1.80130483e-01  1.31503253e+00 -4.76380849e+02]
+ [ 9.65177946e-05  2.85827261e-05  1.00000000e+00]]
+</pre>
+
+                 <div class="image-grid">
+            <figure><img src="images/nerds_cor.png" alt=""><figcaption>Original Image -> Correspondences</figcaption></figure>
+            </div>
+        <p>Homography Matrix H for NERDS:</p>
+<pre>
+[[ 2.52466995e+00  5.18764306e-03 -4.67380964e+03]
+ [ 4.87313912e-01  2.05847287e+00 -1.71587017e+03]
+ [ 3.78037071e-04 -4.85965410e-05  1.00000000e+00]]
+</pre>
+       
 
 
-        <h2>Part A.2</h2>
-        <p>I implemented a warping function that takes the source image and the homography matrix $\mathbf{H}$ corresponding to the transformation from the source to the target image.  For each point in the polygon, I reverse interpolate from the source image by applying $\mathbf{H}^{-1}$ to recover the corresponding point in the source images.</p>
+        <h2>Part A.3: Image Warping & Rectification</h2> <p>I implemented a warping function that takes the source image and the homography matrix $\mathbf{H}$ corresponding to the transformation from the source to the target image.  For each point in the polygon, I reverse interpolate from the source image by applying $\mathbf{H}^{-1}$ to recover the corresponding point in the source images.</p>
+        <p>**ADD HERE**Show results for both interpolation methods and compare the quality. Discuss the trade-offs between speed and quality. Some tips from staff:
+
+</p>
         <div class="image-grid">
             <figure><img src="images/sign_normal.jpg" alt="Original subway ad"><figcaption>Original Image</figcaption></figure>
             <figure><img src="images/sign_warp.jpg" alt="Subway ad with points"><figcaption>Original Image, shifted camera</figcaption></figure>
         </div>
                 <div class="image-grid">
-                                <figure><img src="images/warp_nerds.png" alt="Rectified subway ad"><figcaption>Warped nerds</figcaption></figure>
+                        <figure><img src="images/warp_nerds.png" alt="Rectified subway ad"><figcaption>Warped nerds</figcaption></figure>
 
 </div>
         <p> For the second example, I sourced a poster image from the web. :o</p>
         <div class="image-grid">
             <figure><img src="images/ad.jpg" alt="NYPL ceiling original"><figcaption>Original Image</figcaption></figure>
-            <!-- <figure><img src="./img/nypl_pts.jpg" alt="NYPL ceiling with points"><figcaption>Points Labeled</figcaption></figure> -->
             <figure><img src="images/ad_rectified.png" alt="NYPL ceiling rectified"><figcaption>Rectified Image</figcaption></figure>
         </div>
 
-              <div class="image-grid">
+                <div class="image-grid">
             <figure><img src="images/sign_warp.jpg" alt="NYPL ceiling original"><figcaption>Original Not Rectangular Image</figcaption></figure>
-            <!-- <figure><img src="./img/nypl_pts.jpg" alt="NYPL ceiling with points"><figcaption>Points Labeled</figcaption></figure> -->
             <figure><img src="images/nerds_sign.png" alt="NYPL ceiling rectified"><figcaption>Rectified Image</figcaption></figure>
         </div>
+
         
-        </main>
+        <h2>Part A.4: Blend the Images into a Mosaic</h2>
+        <p>
+            [Explain your blending procedure here. To avoid edge artifacts, I used weighted averaging. I created an alpha mask for each warped image based on the distance from its center using a distance transform (bwdist). At each pixel in the final mosaic, the color is a weighted average of the overlapping images, using their corresponding alpha values as weights. This creates a smooth "feathering" effect at the seams. I warped all images into a single, larger canvas whose size was computed to encompass all transformed images.]
+        </p>
+        
+        <h3>Mosaic 1: Stairs </h3>
+        <p>Source Images:</p>
+        <div class="image-grid">
+            <figure><img src="images/stair1.jpg" alt="Mosaic 1 Source 1"><figcaption>Source Image 1</figcaption></figure>
+            <figure><img src="images/stair2.jpg" alt="Mosaic 1 Source 2"><figcaption>Source Image 2</figcaption></figure>
+            <figure><img src="images/stair3.jpg" alt="Mosaic 1 Source 3"><figcaption>Source Image 3</figcaption></figure>
+
+            </div>
+        <p>Resulting Mosaic:</p>
+        <div class="grid-container">
+            <figure class="grid-item-full-width"><img src="images/MANUAL_VSmosaic_3_images_output_stair.png" alt="Mosaic 1 Result" style="width: 75%;"><figcaption>Mosaic 1 </figcaption></figure>
+        </div>
+           <h3>Mosaic 2: Gazebo </h3>
+        <p>Source Images:</p>
+        <div class="image-grid">
+            <figure><img src="images/trellis_left1.jpg" alt="Mosaic 2 Source 1"><figcaption>Source Image 1</figcaption></figure>
+            <figure><img src="images/trellis_mid2.jpg" alt="Mosaic 2 Source 2"><figcaption>Source Image 2</figcaption></figure>
+            <figure><img src="images/trellis_mid2.jpg" alt="Mosaic 2 Source 3"><figcaption>Source Image 3</figcaption></figure>
+        </div>
+        <br>
+        <p>Resulting Mosaic:</p>
+        <div class="grid-container">
+            <figure class="grid-item-full-width"><img src="images/MANUAL_VSmosaic_3_images_output_trellis.png" alt="Mosaic 1 Result" style="width: 75%;"><figcaption>Mosaic 2</figcaption></figure>
+        </div>
+
+        <h3>Mosaic 3: NERDS</h3>
+        <p>Source Images:</p>
+        <div class="image-grid">
+            <figure><img src="images/nerd1.jpg" alt="Mosaic 3 Source 1"><figcaption>Source Image 1</figcaption></figure>
+            <figure><img src="images/nerd2.jpg" alt="Mosaic 3 Source 2"><figcaption>Source Image 2</figcaption></figure>
+        </div>
+        <br>
+        <p>Resulting Mosaic:</p>
+        <div class="grid-container">
+            <figure class="grid-item-full-width"><img src="images/MANUAL_VSmosaic_3_images_output_nerds.png" alt="Mosaic 1 Result" style="width: 75%;"><figcaption>Mosaic 3</figcaption></figure>
+        </div>
+
+
+        <h1>Part B: Automatic Image Stitching</h1>
+        <p>
+            In this part of the project, I implemented an automatic mosaicing pipeline based on the paper "Multi-Image Matching using Multi-Scale Oriented Patches" by Brown et al. This involved automatically detecting features, describing them, matching them, and using a robust algorithm (RANSAC) to find the correct homography.
+        </p>
+
+        <h2>B.1: Harris Corner Detection and ANMS</h2>
+        <p>
+            [Explain the process here. I first used the provided Harris corner detector to find interest points in the image. This resulted in many clustered points. To get a more spatially distributed set of features, I implemented Adaptive Non-Maximal Suppression (ANMS). For each point, ANMS finds the minimum radius to the nearest neighbor that has a stronger corner response, and I keep the points with the largest radii.]
+        </p>
+        <!-- <div class="image-grid">
+            <figure><img src="images/placeholder_harris.png" alt="Harris corners without ANMS"><figcaption>Harris corners detected (before ANMS)</figcaption></figure>
+            <figure><img src="images/placeholder_anms.png" alt="Harris corners with ANMS"><figcaption>Top 500 corners after Adaptive Non-Maximal Suppression (ANMS)</figcaption></figure>
+        </div> -->
+        <div class="image-grid">
+            <figure><img src="images/harris_anms_comparison_stair.png" alt="Harris corners without ANMS"><figcaption></figcaption></figure>
+        </div>
+        
+                <div class="image-grid">
+    <figure><img src="images/harris_anms_comparison_nerd.png" alt="Harris corners with ANMS"><figcaption></figcaption></figure>
+        </div>
+            <div class="image-grid">
+    
+    <figure><img src="images/harris_anms_comparison_trellis.png" alt="Harris corners with ANMS"><figcaption></figcaption></figure>
+
+        </div>
+
+        <h2>B.2: Feature Descriptor Extraction</h2>
+        <p>
+            [Explain your implementation here. Following Section 4 of the paper, I extracted a feature descriptor for each point from ANMS. I first sampled a 40x40 patch, blurred it, and downsampled it to an 8x8 patch. This blurring and downsampling makes the descriptor more robust to small shifts. Finally, I normalized the 8x8 patch to be zero mean and unit variance, which makes it invariant to bias and gain (affine changes in intensity).]
+        </p>
+        <p>Below are visualizations of some of the 64-dimensional feature vectors, reshaped back into 8x8 patches for viewing.</p>
+        <div class="image-grid">
+            <figure><img src="images/featdescnerds.png" alt="Feature 1"><figcaption>NERDS</figcaption></figure>
+            <figure><img src="images/featdesctrellis.png" alt="Feature 2"><figcaption>Gazebo</figcaption></figure>
+            <!-- <figure><img src="images/featdescstair.png" alt="Feature 3"><figcaption>Stairs</figcaption></figure> -->
+            <!-- <figure><img src="images/placeholder_feat4.png" alt="Feature 4"><figcaption>Extracted Feature 4</figcaption></figure> -->
+        </div>
+
+        <h2>B.3: Feature Matching</h2>
+        <p>
+            [Explain the feature matching process. I implemented the matching strategy from Section 5. For each feature descriptor in the first image, I found its first and second nearest neighbors in the second image using Euclidean distance. I used Lowe's ratio test: a match was accepted only if the ratio (distance to 1st NN) / (distance to 2nd NN) was below a threshold. I chose a threshold of 0.6, as it provided a good balance between finding correct matches and rejecting false positives.]
+        </p>
+        <p>Feature matches found between two images (prior to RANSAC):</p>
+        <div class="grid-container">
+            <figure class="grid-item-full-width"><img src="images/featmatchnerds.png" alt="Feature matches" style="width: 75%;"><figcaption>Found 36 good matches with ratio threshold 0.7.</figcaption></figure>
+            <figure class="grid-item-full-width"><img src="images/featmatchstairs.png" alt="Feature matches" style="width: 75%;"><figcaption>Found 7 good matches with ratio threshold 0.7.</figcaption></figure>
+            <figure class="grid-item-full-width"><img src="images/featmatchestrellis.png" alt="Feature matches" style="width: 75%;"><figcaption>Found 92 good matches with ratio threshold 0.7.</figcaption></figure>            
+        </div>
+
+        <h2>B.4: RANSAC for Robust Homography</h2>
+        <p>
+            [Explain your 4-point RANSAC implementation. The feature matches from B.3 still contained outliers. To robustly compute the homography, I implemented RANSAC. My algorithm loops 10,000 times: 
+            <br>1. Randomly select 4 feature pairs.
+            <br>2. Compute the exact homography H from these 4 pairs.
+            <br>3. Transform all feature points from image 1 using H.
+            <br>4. Count the number of "inliers": points whose transformed location is within a small pixel threshold (e.g., 5 pixels) of their matched point in image 2.
+            <br>After all iterations, I keep the homography that had the largest set of inliers and re-compute H using all inliers from this set to get a more stable result.]
+        </p>
+        
+        <h3>Manual vs. Automatic Stitching Comparison</h3>
+        <p>Here is a side-by-side comparison of the mosaics from Part A (manual points) and Part B (automatic pipeline w/ RANSAC) using the same sets of images.</p>
+        <div class="image-grid">
+            <figure><img src="images/MANUAL_VSmosaic_3_images_output_stair.png" alt="Manual Mosaic"><figcaption>Mosaic from Manually Selected Points (Part A)</figcaption></figure>
+            <figure><img src="images/mosaic_RANSAC_stair (1).png" alt="Automatic Mosaic"><figcaption>Mosaic from RANSAC-computed Homography (Part B)</figcaption></figure>
+        </div>
+        
+        <div class="image-grid">
+            <figure><img src="images/MANUAL_VSmosaic_3_images_output_trellis.png" alt="Auto Mosaic 1 Source 1"><figcaption>Manual</figcaption></figure>
+            <figure><img src="images/mosaic_RANSAC_trellis.png" alt="Auto Mosaic 1 Source 2"><figcaption>RANSAC</figcaption></figure>
+        </div>
+
+        <div class="image-grid">
+            <figure><img src="images/MANUAL_VSmosaic_3_images_output_nerds.png" alt="Auto Mosaic 2 Source 1"><figcaption>Manual</figcaption></figure>
+            <figure><img src="images/mosaic_RANSAC_2img.png" alt="Auto Mosaic 2 Source 2"><figcaption>RANSAC</figcaption></figure>
+            <!-- <figure><img src="images/mosaic_RANSAC_NERD.png" alt="Auto Mosaic 2 Source 3"><figcaption>Source 3</figcaption></figure> -->
+        </div>
+
+
+
+    </main>
 
 </body>
 </html>
