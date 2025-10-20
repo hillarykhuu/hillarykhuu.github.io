@@ -133,7 +133,7 @@
 
         <h2>Part A.1: Image Acquisition</h2>
         <p>
-            To create a mosaic, we need images that share a projective transformation. I captured these by fixing my camera's center of projection (keeping the camera in one spot) and rotating it to capture overlapping scenes. I ensured there was about 50-70% overlap between images to make registration easier.
+            To create a mosaic, we need images that share a projective transformation. I captured these by fixing my camera's center of projection (keeping the camera in one spot) and rotating it to capture overlapping scenes.
         </p>
         
         <h3>Image Set 1: Stairs </h3>
@@ -165,7 +165,10 @@
         <p>We can solve for H by solving a system of equations with eight degrees of freedom, using the keypoints we generated using <a href="https://cal-cs180.github.io/fa23/hw/proj3/tool.html">this tool</a>. Full set of points:</p>
         $$ \begin{bmatrix} x_1 & y_1 & 1 & 0 & 0 & 0 & -x'_1 x_1 & -x'_1 y_1 \\ 0 & 0 & 0 & x_1 & y_1 & 1 & -y'_1 x_1 & -y'_1 y_1 \\ x_2 & y_2 & 1 & 0 & 0 & 0 & -x'_2 x_2 & -x'_2 y_2 \\ 0 & 0 & 0 & x_2 & y_2 & 1 & -y'_2 x_2 & -y'_2 y_2 \\ \vdots & \vdots & \vdots & \vdots & \vdots & \vdots & \vdots & \vdots \\ x_n & y_n & 1 & 0 & 0 & 0 & -x'_n x_n & -x'_n y_n \\ 0 & 0 & 0 & x_n & y_n & 1 & -y'_n x_n & -y'_n y_n \end{bmatrix} \begin{bmatrix} h_1 \\ h_2 \\ h_3 \\ h_4 \\ h_5 \\ h_6 \\ h_7 \\ h_8 \end{bmatrix} = \begin{bmatrix} x'_1 \\ y'_1 \\ x'_2 \\ y'_2 \\ \vdots \\ x'_n \\ y'_n \end{bmatrix} $$
         <p>We solve this with a least-squares to find the minimum norm solution with more than four points. We want more points than the min 4 in order to make our homography recovery more robust against noise.</p>
-                <div class="image-grid">
+        <p>Implementation: We use A matrix and b vector with np.zeros. There are 8 unknown h vals. We loop through the n point Correspondences from the first image and the second image, let us denote this as x,y and x',y' respectivley. For each pair we create two rows, one for x' and one for y' that correspond to the equation from above. Then, we use np.linalg.lstsq to sove our system. It finds the h vector with 8 elements and gives the best possible fit/least sqs soln. Then we create a 3x3 H matrix like we saw in class. H[2, 2]is set to 0, and the other 8 points are taken from h_vector.</p>        
+        
+        
+        <div class="image-grid">
             <figure><img src="images/stair_cor.png" alt=""><figcaption>Original Image -> Correspondences</figcaption></figure>
             </div>
         <p>Homography Matrix H for the stairs:</p>
@@ -187,34 +190,35 @@
        
 
 
-        <h2>Part A.3: Image Warping & Rectification</h2> <p>I implemented a warping function that takes the source image and the homography matrix $\mathbf{H}$ corresponding to the transformation from the source to the target image.  For each point in the polygon, I reverse interpolate from the source image by applying $\mathbf{H}^{-1}$ to recover the corresponding point in the source images.</p>
-        <p>**ADD HERE**Show results for both interpolation methods and compare the quality. Discuss the trade-offs between speed and quality. Some tips from staff:
+        <h2>Part A.3: Image Warping & Rectification</h2> <p>I implemented a warping function that takes the source image and the homography matrix H corresponding to the transformation from the source to the target image.  For each point in the polygon, I reverse interpolate from the source image by applying H^-1 to recover the corresponding point in the source images.</p>
+        <p>Implementation: Both interpolate methods use invrse warping. We create a grid of al pixel cords for the output image, then apply the inverse Homography to the grid. </p>
+        <p>For NN, we find the closest pixel in x and y direction by using np.round to int. We create a mask to ensure te pixel coords are inside the bounds of the original image. Then we assign colors to pixels that are within bounds. </p>
+        <p>For Bilinear, I used the example of corners represnting pixels. I used floor to get this pixel corner in all four directions. Then to find weights we need to take the fractional distances that tell us how far into the cell the point is. Based on thsi the weight for each corner is the area of opposite rectangle. The corner that the pixel is nearest to is given the heighest weight. Then, to get the colors, we interpolate with our weighted averages multipled by the 4 corner colors. Then we assign thees colors to our output image.</p>
+        <p>In terms of time it took for the functions to run, warpImageNearestNeighbor took between 0.2-0.3s on average across the runs I did. warpImageBilinear took 0.6s. Despite warpImageBilinear taking longer, it resulted in smoother imagesan NN. With NN we experience aliasing since it takes on the closest pixel, whereas with Bilinear we take the weighted avg of four nearest pixels with blurs hard edges. Bilinear takes longer run since it has to compute weighted averages across four pixels, but the image quality is better.</p>
 
-</p>
         <div class="image-grid">
-            <figure><img src="images/sign_normal.jpg" alt="Original subway ad"><figcaption>Original Image</figcaption></figure>
-            <figure><img src="images/sign_warp.jpg" alt="Subway ad with points"><figcaption>Original Image, shifted camera</figcaption></figure>
+            <figure><img src="images/sign_normal.jpg" alt="Original subway ad"><figcaption>Image I captured, what we want our warping functions to be able to rectify to</figcaption></figure>
+            <figure><img src="images/sign_warp.jpg" alt="Subway ad with points"><figcaption>Image I captured with rotated camera that we will try to rectify</figcaption></figure>
         </div>
                 <div class="image-grid">
-                        <figure><img src="images/warp_nerds.png" alt="Rectified subway ad"><figcaption>Warped nerds</figcaption></figure>
+                        <figure><img src="images/nerds_NN_bilin.png" alt="Rectified subway ad" ><figcaption>Warped nerds</figcaption></figure>
 
 </div>
         <p> For the second example, I sourced a poster image from the web. :o</p>
-        <div class="image-grid">
-            <figure><img src="images/ad.jpg" alt="NYPL ceiling original"><figcaption>Original Image</figcaption></figure>
-            <figure><img src="images/ad_rectified.png" alt="NYPL ceiling rectified"><figcaption>Rectified Image</figcaption></figure>
-        </div>
+        <!-- <div class="image-grid">
+            <figure><img src="images/ad.jpg" alt="AD" style="width: 20%;"><figcaption>Original Image that I will try to rectify</figcaption></figure>
+        </div> -->
 
                 <div class="image-grid">
-            <figure><img src="images/sign_warp.jpg" alt="NYPL ceiling original"><figcaption>Original Not Rectangular Image</figcaption></figure>
-            <figure><img src="images/nerds_sign.png" alt="NYPL ceiling rectified"><figcaption>Rectified Image</figcaption></figure>
+            <!-- <figure><img src="images/sign_warp.jpg" alt="NYPL ceiling original"><figcaption>Original Not Rectangular Image</figcaption></figure> -->
+            <figure><img src="images/ad_NN_bilin.png" alt="NYPL ceiling rectified"><figcaption>Rectified Image</figcaption></figure>
         </div>
 
         
         <h2>Part A.4: Blend the Images into a Mosaic</h2>
-        <p>
-            [Explain your blending procedure here. To avoid edge artifacts, I used weighted averaging. I created an alpha mask for each warped image based on the distance from its center using a distance transform (bwdist). At each pixel in the final mosaic, the color is a weighted average of the overlapping images, using their corresponding alpha values as weights. This creates a smooth "feathering" effect at the seams. I warped all images into a single, larger canvas whose size was computed to encompass all transformed images.]
-        </p>
+        <p>Here, I try to stitch 2-3 images into one mosaic. I calculate the homography, warp the images to align, then blend together with weigthed averaging. I reused compute H which calculates 3x3 homography matrix H by taking in two lists of matching points between im1 and im2. I used the Correspondence tool given from class to get these points. We need at least 4 pairs. Then, I used bilinear interpolation to get the best colors per pixel with weighted averaging. This blends the colors to get a smoother image. Then, we use the image, homography H, and target size to compute a transformed image with inverse warping. We create a blank grid, get the inversehomography for H, then multiply the grid by the inverse homography to get source coords for every pixel which maps the pixels from the original image to the output image. We loop through every pixel in the output image and get the corresponding source coordinate, use bilinear interpolation to get the blended collor and place it into the output image.</p>
+        <p>We need to stitch the images together with a function to create mosiacs. We first create a translation matrix T that shifts to ensure everything will fit on the grid. To blend images at the overlaps, we can use distance_transform_edt  to get a weight mask and feather these edges. Then, for each image, we warp it onto the main grid with T @ H and warp the feathered mask. We aslo keep track of the pixel colors' weighted averages and the sum of the weights, which we can divide to get a weighted average for all the pixels.</p>
+        <p>In the 3 image case, I had to use the Correspondence tool to calculate homographies. Then I chained the matrices like so: H_3_to_1 = H_2_to_1 @ H_3_to_2 and this allowed the 3 images to warp for my mosaic.</p>
         
         <h3>Mosaic 1: Stairs </h3>
         <p>Source Images:</p>
