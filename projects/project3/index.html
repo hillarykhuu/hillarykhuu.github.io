@@ -111,6 +111,22 @@
             text-decoration: none;
             margin-top: 15px;
         }
+        .matrix {
+            display: inline-block;
+            border: 1px solid #ccc;
+            padding: 10px 20px;
+            margin: 10px;
+            background-color: #fff;
+            border-radius: 6px;
+        }
+        .matrix pre {
+            margin: 0;
+            font-size: 14px;
+            white-space: pre;
+        }
+        .section {
+            margin-top: 30px;
+        }
     </style>
 </head>
 <body>
@@ -181,6 +197,53 @@
                  <div class="image-grid">
             <figure><img src="images/nerds_cor.png" alt=""><figcaption>Original Image -> Correspondences</figcaption></figure>
             </div>
+
+
+        <h2>System of Equations (A h = b)</h2>
+
+<div class="equation">
+  <div class="matrix">
+    <pre>[
+ [ 3196.  1355.     1.     0.     0.     0. -5075248. -2151740.]
+ [    0.     0.     0.  3196.  1355.     1. -3924688. -1663940.]
+ [ 2645.   440.     1.     0.     0.     0. -2682030.  -446160.]
+ [    0.     0.     0.  2645.   440.     1.  -640090.  -106480.]
+ [ 2512.   671.     1.     0.     0.     0. -2190464.  -585112.]
+ [    0.     0.     0.  2512.   671.     1. -1165568.  -311344.]
+ [ 2055.   680.     1.     0.     0.     0.  -610335.  -201960.]
+ [    0.     0.     0.  2055.   680.     1.  -807615.  -267240.]
+]</pre>
+  </div>
+
+  <div class="symbol">×</div>
+
+  <div class="matrix">
+    <pre>[ h11,
+  h12,
+  h13,
+  h21,
+  h22,
+  h23,
+  h31,
+  h32 ]ᵀ</pre>
+  </div>
+
+  <div class="symbol">=</div>
+
+  <div class="matrix">
+    <pre>[
+ [1588.]
+ [1228.]
+ [1014.]
+ [ 242.]
+ [ 872.]
+ [ 464.]
+ [ 297.]
+ [ 393.]
+]</pre>
+  </div>
+</div>
+
         <p>Homography Matrix H for NERDS:</p>
 <pre>
 [[ 2.52466995e+00  5.18764306e-03 -4.67380964e+03]
