@@ -265,8 +265,9 @@
 
         <h2>B.1: Harris Corner Detection and ANMS</h2>
         <p>
-            [Explain the process here. I first used the provided Harris corner detector to find interest points in the image. This resulted in many clustered points. To get a more spatially distributed set of features, I implemented Adaptive Non-Maximal Suppression (ANMS). For each point, ANMS finds the minimum radius to the nearest neighbor that has a stronger corner response, and I keep the points with the largest radii.]
+            I first used the provided starter code Harris corner detector to find interest points in the image. This resulted in many clustered points. To get a more spatially distributed set of features, I implemented Adaptive Non-Maximal Suppression (ANMS). For each point, ANMS finds the minimum radius to the nearest neighbor that has a stronger corner response, and I keep the points with the largest radii.
         </p>
+        <p>I used the paper to develop ANMS. Every corner gets a suppression radius. It loops through every single corner. If no other corners have a higher harris score, tehn the radius is set to inf. If there are stronger corners, it picks the closest corner and the distance between is the suppression radius. After the loop all corners have a radius and corners that have no strong corners nearby will have a large radius. We then sort corners by their raidus and pick the top 500.</p>
         <!-- <div class="image-grid">
             <figure><img src="images/placeholder_harris.png" alt="Harris corners without ANMS"><figcaption>Harris corners detected (before ANMS)</figcaption></figure>
             <figure><img src="images/placeholder_anms.png" alt="Harris corners with ANMS"><figcaption>Top 500 corners after Adaptive Non-Maximal Suppression (ANMS)</figcaption></figure>
@@ -286,8 +287,10 @@
 
         <h2>B.2: Feature Descriptor Extraction</h2>
         <p>
-            [Explain your implementation here. Following Section 4 of the paper, I extracted a feature descriptor for each point from ANMS. I first sampled a 40x40 patch, blurred it, and downsampled it to an 8x8 patch. This blurring and downsampling makes the descriptor more robust to small shifts. Finally, I normalized the 8x8 patch to be zero mean and unit variance, which makes it invariant to bias and gain (affine changes in intensity).]
+            Following Section 4 of the paper, I extracted a feature descriptor for each point from ANMS. I first sampled a 40x40 patch, blurred it, and downsampled it to an 8x8 patch. This blurring and downsampling makes the descriptor more robust to small shifts. Finally, I normalized the 8x8 patch to be zero mean and unit variance.
         </p>
+        <p>I created extract_descriptors to take a list of corner coords. For each corner, we extract a 40x40 window which has a Gaussian blur applied to reduce noise. This makes the descriptor capture more blocky shapes by reducing noise. Then I subsample to a 8x8 patch. Finally I normalize by taking the mean brightness adn standard deviation. </p>
+
         <p>Below are visualizations of some of the 64-dimensional feature vectors, reshaped back into 8x8 patches for viewing.</p>
         <div class="image-grid">
             <figure><img src="images/featdescnerds.png" alt="Feature 1"><figcaption>NERDS</figcaption></figure>
@@ -298,8 +301,8 @@
 
         <h2>B.3: Feature Matching</h2>
         <p>
-            [Explain the feature matching process. I implemented the matching strategy from Section 5. For each feature descriptor in the first image, I found its first and second nearest neighbors in the second image using Euclidean distance. I used Lowe's ratio test: a match was accepted only if the ratio (distance to 1st NN) / (distance to 2nd NN) was below a threshold. I chose a threshold of 0.6, as it provided a good balance between finding correct matches and rejecting false positives.]
-        </p>
+            I implemented the matching strategy from the paper. For each feature descriptor in the first image, I found its first and second nearest neighbors in the second image using Euclidean distance.
+             I used Lowe's ratio test: a match was accepted only if the ratio (distance to 1st NN) / (distance to 2nd NN) was below a threshold. I chose a threshold of 0.7 based on figure 6b. This whole process requires calling get_harris_corners, filtering for the top 500 with anms, calling extract_descriptors, then returning the final 500 coords and 500 descriptrs. </p>
         <p>Feature matches found between two images (prior to RANSAC):</p>
         <div class="grid-container">
             <figure class="grid-item-full-width"><img src="images/featmatchnerds.png" alt="Feature matches" style="width: 75%;"><figcaption>Found 36 good matches with ratio threshold 0.7.</figcaption></figure>
@@ -307,15 +310,17 @@
             <figure class="grid-item-full-width"><img src="images/featmatchestrellis.png" alt="Feature matches" style="width: 75%;"><figcaption>Found 92 good matches with ratio threshold 0.7.</figcaption></figure>            
         </div>
 
-        <h2>B.4: RANSAC for Robust Homography</h2>
+        <h2>B.4: RANSAC [RANdom SAmple Consensus] for Robust Homography</h2>
         <p>
-            [Explain your 4-point RANSAC implementation. The feature matches from B.3 still contained outliers. To robustly compute the homography, I implemented RANSAC. My algorithm loops 10,000 times: 
+            As we can see, the feature matches from B.3 still contained outliers. I implemented RANSAC. This part will allow us to automatically find and visualize matching points between our different images - no more manually clicking, yay!
             <br>1. Randomly select 4 feature pairs.
             <br>2. Compute the exact homography H from these 4 pairs.
             <br>3. Transform all feature points from image 1 using H.
-            <br>4. Count the number of "inliers": points whose transformed location is within a small pixel threshold (e.g., 5 pixels) of their matched point in image 2.
-            <br>After all iterations, I keep the homography that had the largest set of inliers and re-compute H using all inliers from this set to get a more stable result.]
+            <br>4. Count the number of "inliers": points whose transformed location is within a threshold of their matched point in image 2.
+            <br>5. After all iterations, keep the homography that had the largest set of inliers and re-compute H using all inliers from this set to get a more stable result.
         </p>
+        <p>My final algorithm involves all the functions we've defined throughout this project. Before, we got the harris corners, use ANMS, and extract the descriptors on each image. Now we want to compare them, and we can do this with match_features to get the top 500 features and descriptors, then get the best matches. However, we saw there were outliers. RANSAC comes in to solve this issue with the algorithm above. We call ransac on the result of match_features between 2 images and the two coordinate sets between those same two images.
+            RANSAC then outputs the homography matrix H and the list of best inliers for that homography. If we want to mosaic together more than 2 images, we must run RANSAC on each adjacent images pair. Finally, we use the create_mosaic(images, homographies_ransac) from part A and pass in the list of images and homographies_ransac which is the best H for each pair.  </p>
         
         <h3>Manual vs. Automatic Stitching Comparison</h3>
         <p>Here is a side-by-side comparison of the mosaics from Part A (manual points) and Part B (automatic pipeline w/ RANSAC) using the same sets of images.</p>
