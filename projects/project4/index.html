@@ -452,6 +452,14 @@
                         wide network)</div>
                 </div>
             </div>
+                         <p>
+Analysis:<br>
+<strong>L=0, Width=32:</strong> Near-complete loss of fine structure. smooth, heavily blurred approximation. small network -> color blobs and boundaries but no recognizable facial features or texture.<br>
+<strong>L=0, Width=256:</strong> With the same (no) positional frequencies but much larger capacity, the network recovers some coarse shape and shading variations (the head and background). However, high-frequency detail and sharp edges are missing.<br>
+<strong>L=10, Width=32:</strong> High-frequency positional encoding brings back edges and texture. You see the fox's facial structure, and many fine details, but there are strong reconstruction artifacts. Therefore, encoding alone is insufficient without model capacity.<br>
+<strong>L=10, Width=256:</strong> Combining high positional frequencies with a wide network produces the best reconstruction. clear fur texture, edges around the ears and eyes. both sufficient frequency coverage and model width are necessary.<br>
+Summary: Low L (no high frequencies) -> smooth, blurry outputs; increasing width helps find shape but cannot recreate fine detail without higher L. High L -> enables fine structure, but requires enough width to avoid artifacts and fully reconstruct texture.
+</p>
 
             <div class="highlight">
                 <h4></h4>
@@ -481,14 +489,14 @@
             </p>
 
             <div class="image-container span-all">
-                <img src="results/test1.jpg_10_256/training_curves.png" alt="PSNR Curve" class="large-image">
+                <img src="part1_images/fox_psnr.png" alt="PSNR Curve" class="large-image">
                 <div class="image-caption">PSNR Training Curve for Fox Image
                     (L=10, Width=256)
                 </div>
             </div>
             <div class="image-container span-all">
-                <img src="results/test2.jpg_10_256/training_curves.png" alt="PSNR Curve" class="large-image">
-                <div class="image-caption">PSNR Training Curve for Sunset Image
+                <img src="part1_images/mencho_psnr.png" alt="PSNR Curve" class="large-image">
+                <div class="image-caption">PSNR Training Curve for Guinea Pig
                     (L=10, Width=256)
                 </div>
             </div>
@@ -556,41 +564,35 @@
 
             <h4>Sampling Rays from Images</h4>
             <p>
-                Similar to Part 1, we randomly sample pixels (and thus rays)
+                We randomly sample pixels and rays
                 from the training images. At each
-                iteration, I sample <mjx-container class="MathJax CtxtMenu_Attached_0" jax="CHTML" tabindex="0" ctxtmenu_counter="25" style="font-size: 113.1%; position: relative;"><mjx-math class="MJX-TEX" aria-hidden="true"><mjx-mi class="mjx-i"><mjx-c class="mjx-c1D441 TEX-I"></mjx-c></mjx-mi></mjx-math><mjx-assistive-mml unselectable="on" display="inline"><math xmlns="http://www.w3.org/1998/Math/MathML"><mi>N</mi></math></mjx-assistive-mml></mjx-container> rays from all training images. The
-                implementation accounts for the offset from
-                image coordinates to pixel centers by adding 0.5 to the UV
-                coordinates.
+                iteration, I sample <mjx-container class="MathJax CtxtMenu_Attached_0" jax="CHTML" tabindex="0" ctxtmenu_counter="25" style="font-size: 113.1%; position: relative;"><mjx-math class="MJX-TEX" aria-hidden="true"><mjx-mi class="mjx-i"><mjx-c class="mjx-c1D441 TEX-I"></mjx-c></mjx-mi></mjx-math><mjx-assistive-mml unselectable="on" display="inline"><math xmlns="http://www.w3.org/1998/Math/MathML"><mi>N</mi></math></mjx-assistive-mml></mjx-container> rays from all training images. 
+                We adding 0.5 to UV
+                coordinates as the offset from the center of the pixel.
             </p>
 
             <h4>Sampling Points along Rays</h4>
             <p>
-                Each ray is discretized into samples along its length. I use
-                uniform sampling between near and far
+                Each ray is represented by samples along its len via
+                uniform sampling between near & far
                 planes:
                 <mjx-container class="MathJax CtxtMenu_Attached_0" jax="CHTML" display="true" tabindex="0" ctxtmenu_counter="26" style="font-size: 113.1%; position: relative;"><mjx-math display="true" class="MJX-TEX" aria-hidden="true" style="margin-left: 0px; margin-right: 0px;"><mjx-msub><mjx-mi class="mjx-i"><mjx-c class="mjx-c1D461 TEX-I"></mjx-c></mjx-mi><mjx-script style="vertical-align: -0.15em;"><mjx-mi class="mjx-i" size="s"><mjx-c class="mjx-c1D456 TEX-I"></mjx-c></mjx-mi></mjx-script></mjx-msub><mjx-mo class="mjx-n" space="4"><mjx-c class="mjx-c3D"></mjx-c></mjx-mo><mjx-mtext class="mjx-n" space="4"><mjx-c class="mjx-c6E"></mjx-c><mjx-c class="mjx-c65"></mjx-c><mjx-c class="mjx-c61"></mjx-c><mjx-c class="mjx-c72"></mjx-c></mjx-mtext><mjx-mo class="mjx-n" space="3"><mjx-c class="mjx-c2B"></mjx-c></mjx-mo><mjx-mfrac space="3"><mjx-frac type="d"><mjx-num><mjx-nstrut type="d"></mjx-nstrut><mjx-mi class="mjx-i"><mjx-c class="mjx-c1D456 TEX-I"></mjx-c></mjx-mi></mjx-num><mjx-dbox><mjx-dtable><mjx-line type="d"></mjx-line><mjx-row><mjx-den><mjx-dstrut type="d"></mjx-dstrut><mjx-mrow><mjx-mi class="mjx-i"><mjx-c class="mjx-c1D441 TEX-I"></mjx-c></mjx-mi><mjx-mo class="mjx-n" space="3"><mjx-c class="mjx-c2212"></mjx-c></mjx-mo><mjx-mn class="mjx-n" space="3"><mjx-c class="mjx-c31"></mjx-c></mjx-mn></mjx-mrow></mjx-den></mjx-row></mjx-dtable></mjx-dbox></mjx-frac></mjx-mfrac><mjx-mo class="mjx-n"><mjx-c class="mjx-c28"></mjx-c></mjx-mo><mjx-mtext class="mjx-n"><mjx-c class="mjx-c66"></mjx-c><mjx-c class="mjx-c61"></mjx-c><mjx-c class="mjx-c72"></mjx-c></mjx-mtext><mjx-mo class="mjx-n" space="3"><mjx-c class="mjx-c2212"></mjx-c></mjx-mo><mjx-mtext class="mjx-n" space="3"><mjx-c class="mjx-c6E"></mjx-c><mjx-c class="mjx-c65"></mjx-c><mjx-c class="mjx-c61"></mjx-c><mjx-c class="mjx-c72"></mjx-c></mjx-mtext><mjx-mo class="mjx-n"><mjx-c class="mjx-c29"></mjx-c></mjx-mo></mjx-math><mjx-assistive-mml unselectable="on" display="block"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><msub><mi>t</mi><mi>i</mi></msub><mo>=</mo><mtext>near</mtext><mo>+</mo><mfrac><mi>i</mi><mrow><mi>N</mi><mo>−</mo><mn>1</mn></mrow></mfrac><mo stretchy="false">(</mo><mtext>far</mtext><mo>−</mo><mtext>near</mtext><mo stretchy="false">)</mo></math></mjx-assistive-mml></mjx-container>
-                The 3D coordinates are then: <mjx-container class="MathJax CtxtMenu_Attached_0" jax="CHTML" tabindex="0" ctxtmenu_counter="27" style="font-size: 113.1%; position: relative;"><mjx-math class="MJX-TEX" aria-hidden="true"><mjx-msub><mjx-texatom texclass="ORD"><mjx-mi class="mjx-b"><mjx-c class="mjx-c1D431 TEX-B"></mjx-c></mjx-mi></mjx-texatom><mjx-script style="vertical-align: -0.15em;"><mjx-mi class="mjx-i" size="s"><mjx-c class="mjx-c1D456 TEX-I"></mjx-c></mjx-mi></mjx-script></mjx-msub><mjx-mo class="mjx-n" space="4"><mjx-c class="mjx-c3D"></mjx-c></mjx-mo><mjx-texatom space="4" texclass="ORD"><mjx-mi class="mjx-b"><mjx-c class="mjx-c1D428 TEX-B"></mjx-c></mjx-mi></mjx-texatom><mjx-mo class="mjx-n" space="3"><mjx-c class="mjx-c2B"></mjx-c></mjx-mo><mjx-msub space="3"><mjx-mi class="mjx-i"><mjx-c class="mjx-c1D461 TEX-I"></mjx-c></mjx-mi><mjx-script style="vertical-align: -0.15em;"><mjx-mi class="mjx-i" size="s"><mjx-c class="mjx-c1D456 TEX-I"></mjx-c></mjx-mi></mjx-script></mjx-msub><mjx-texatom texclass="ORD"><mjx-mi class="mjx-b"><mjx-c class="mjx-c1D41D TEX-B"></mjx-c></mjx-mi></mjx-texatom></mjx-math><mjx-assistive-mml unselectable="on" display="inline"><math xmlns="http://www.w3.org/1998/Math/MathML"><msub><mrow data-mjx-texclass="ORD"><mi mathvariant="bold">x</mi></mrow><mi>i</mi></msub><mo>=</mo><mrow data-mjx-texclass="ORD"><mi mathvariant="bold">o</mi></mrow><mo>+</mo><msub><mi>t</mi><mi>i</mi></msub><mrow data-mjx-texclass="ORD"><mi mathvariant="bold">d</mi></mrow></math></mjx-assistive-mml></mjx-container>.
+                3D coords are: <mjx-container class="MathJax CtxtMenu_Attached_0" jax="CHTML" tabindex="0" ctxtmenu_counter="27" style="font-size: 113.1%; position: relative;"><mjx-math class="MJX-TEX" aria-hidden="true"><mjx-msub><mjx-texatom texclass="ORD"><mjx-mi class="mjx-b"><mjx-c class="mjx-c1D431 TEX-B"></mjx-c></mjx-mi></mjx-texatom><mjx-script style="vertical-align: -0.15em;"><mjx-mi class="mjx-i" size="s"><mjx-c class="mjx-c1D456 TEX-I"></mjx-c></mjx-mi></mjx-script></mjx-msub><mjx-mo class="mjx-n" space="4"><mjx-c class="mjx-c3D"></mjx-c></mjx-mo><mjx-texatom space="4" texclass="ORD"><mjx-mi class="mjx-b"><mjx-c class="mjx-c1D428 TEX-B"></mjx-c></mjx-mi></mjx-texatom><mjx-mo class="mjx-n" space="3"><mjx-c class="mjx-c2B"></mjx-c></mjx-mo><mjx-msub space="3"><mjx-mi class="mjx-i"><mjx-c class="mjx-c1D461 TEX-I"></mjx-c></mjx-mi><mjx-script style="vertical-align: -0.15em;"><mjx-mi class="mjx-i" size="s"><mjx-c class="mjx-c1D456 TEX-I"></mjx-c></mjx-mi></mjx-script></mjx-msub><mjx-texatom texclass="ORD"><mjx-mi class="mjx-b"><mjx-c class="mjx-c1D41D TEX-B"></mjx-c></mjx-mi></mjx-texatom></mjx-math><mjx-assistive-mml unselectable="on" display="inline"><math xmlns="http://www.w3.org/1998/Math/MathML"><msub><mrow data-mjx-texclass="ORD"><mi mathvariant="bold">x</mi></mrow><mi>i</mi></msub><mo>=</mo><mrow data-mjx-texclass="ORD"><mi mathvariant="bold">o</mi></mrow><mo>+</mo><msub><mi>t</mi><mi>i</mi></msub><mrow data-mjx-texclass="ORD"><mi mathvariant="bold">d</mi></mrow></math></mjx-assistive-mml></mjx-container>.
             </p>
 
             <p>
                 To prevent overfitting and ensure all locations along the ray
-                are explored during training, I add small
-                random perturbations to the sample positions:
-                <mjx-container class="MathJax CtxtMenu_Attached_0" jax="CHTML" display="true" tabindex="0" ctxtmenu_counter="28" style="font-size: 113.1%; position: relative;"><mjx-math display="true" class="MJX-TEX" aria-hidden="true" style="margin-left: 0px; margin-right: 0px;"><mjx-msubsup><mjx-mi class="mjx-i"><mjx-c class="mjx-c1D461 TEX-I"></mjx-c></mjx-mi><mjx-script style="vertical-align: -0.247em; margin-left: 0px;"><mjx-mo class="mjx-var" size="s"><mjx-c class="mjx-c2032"></mjx-c></mjx-mo><mjx-spacer style="margin-top: 0.223em;"></mjx-spacer><mjx-mi class="mjx-i" size="s"><mjx-c class="mjx-c1D456 TEX-I"></mjx-c></mjx-mi></mjx-script></mjx-msubsup><mjx-mo class="mjx-n" space="4"><mjx-c class="mjx-c3D"></mjx-c></mjx-mo><mjx-msub space="4"><mjx-mi class="mjx-i"><mjx-c class="mjx-c1D461 TEX-I"></mjx-c></mjx-mi><mjx-script style="vertical-align: -0.15em;"><mjx-mi class="mjx-i" size="s"><mjx-c class="mjx-c1D456 TEX-I"></mjx-c></mjx-mi></mjx-script></mjx-msub><mjx-mo class="mjx-n" space="3"><mjx-c class="mjx-c2B"></mjx-c></mjx-mo><mjx-texatom space="3" texclass="ORD"><mjx-mi class="mjx-cal mjx-i"><mjx-c class="mjx-c55 TEX-C"></mjx-c></mjx-mi></mjx-texatom><mjx-mo class="mjx-n"><mjx-c class="mjx-c28"></mjx-c></mjx-mo><mjx-mn class="mjx-n"><mjx-c class="mjx-c30"></mjx-c></mjx-mn><mjx-mo class="mjx-n"><mjx-c class="mjx-c2C"></mjx-c></mjx-mo><mjx-mi class="mjx-n" space="2"><mjx-c class="mjx-c394"></mjx-c></mjx-mi><mjx-mi class="mjx-i"><mjx-c class="mjx-c1D461 TEX-I"></mjx-c></mjx-mi><mjx-mo class="mjx-n"><mjx-c class="mjx-c29"></mjx-c></mjx-mo></mjx-math><mjx-assistive-mml unselectable="on" display="block"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><msubsup><mi>t</mi><mi>i</mi><mo data-mjx-alternate="1">′</mo></msubsup><mo>=</mo><msub><mi>t</mi><mi>i</mi></msub><mo>+</mo><mrow data-mjx-texclass="ORD"><mi data-mjx-variant="-tex-calligraphic" mathvariant="script">U</mi></mrow><mo stretchy="false">(</mo><mn>0</mn><mo>,</mo><mi mathvariant="normal">Δ</mi><mi>t</mi><mo stretchy="false">)</mo></math></mjx-assistive-mml></mjx-container>
-                where <mjx-container class="MathJax CtxtMenu_Attached_0" jax="CHTML" tabindex="0" ctxtmenu_counter="29" style="font-size: 113.1%; position: relative;"><mjx-math class="MJX-TEX" aria-hidden="true"><mjx-mi class="mjx-n"><mjx-c class="mjx-c394"></mjx-c></mjx-mi><mjx-mi class="mjx-i"><mjx-c class="mjx-c1D461 TEX-I"></mjx-c></mjx-mi></mjx-math><mjx-assistive-mml unselectable="on" display="inline"><math xmlns="http://www.w3.org/1998/Math/MathML"><mi mathvariant="normal">Δ</mi><mi>t</mi></math></mjx-assistive-mml></mjx-container> is the interval width. This perturbation is
-                only applied during training, not during
-                inference.
+                are considered during training, I add small
+                random perturbations.
             </p>
 
             <div class="technical-details">
-                <h4>Sampling Parameters</h4>
+                <h4>Sampling Params</h4>
                 <ul>
-                    <li><strong>Near plane:</strong> 2.0 (for Lego scene)</li>
-                    <li><strong>Far plane:</strong> 6.0 (for Lego scene)</li>
-                    <li><strong>Number of samples:</strong> 32-64 per ray</li>
-                    <li><strong>Perturbation:</strong> Random offset within each
-                        interval during training</li>
+                    <li><strong>Near plane:</strong> 2.0</li>
+                    <li><strong>Far plane:</strong> 6.0 </li>
+                    <li><strong>Num. samples:</strong> 32-64/ray</li>
+                    <li><strong>Perturbation:</strong> Random small offset</li>
                 </ul>
             </div>
 
@@ -603,13 +605,13 @@
 
             <div class="image-grid" style="grid-template-columns: repeat(2, 1fr);">
                 <div class="image-container">
-                    <img src="results/results/lego_rays_one_cam.jpg" alt="Rays from One Camera">
-                    <div class="image-caption">Rays and Samples from a Single
+                    <img src="part1_images/part2visersampelray.png" alt="Rays from One Camera">
+                    <div class="image-caption">Rays and Samples from one
                         Camera</div>
                 </div>
                 <div class="image-container">
-                    <img src="results/results/lego_rays_many.jpg" alt="Rays from Many Cameras">
-                    <div class="image-caption">Rays and Samples from Multiple
+                    <img src="part1_images/sampefromrays_all.png" alt="Rays from Many Cameras">
+                    <div class="image-caption">Rays and Samples from All 
                         Cameras</div>
                 </div>
             </div>
@@ -622,22 +624,17 @@
                     <li><strong>Input:</strong>
                         <ul>
                             <li>3D coordinates <mjx-container class="MathJax CtxtMenu_Attached_0" jax="CHTML" tabindex="0" ctxtmenu_counter="30" style="font-size: 113.1%; position: relative;"><mjx-math class="MJX-TEX" aria-hidden="true"><mjx-texatom texclass="ORD"><mjx-mi class="mjx-b"><mjx-c class="mjx-c1D431 TEX-B"></mjx-c></mjx-mi></mjx-texatom><mjx-mo class="mjx-n" space="4"><mjx-c class="mjx-c2208"></mjx-c></mjx-mo><mjx-msup space="4"><mjx-texatom texclass="ORD"><mjx-mi class="mjx-ds mjx-b"><mjx-c class="mjx-c211D TEX-A"></mjx-c></mjx-mi></mjx-texatom><mjx-script style="vertical-align: 0.363em;"><mjx-mn class="mjx-n" size="s"><mjx-c class="mjx-c33"></mjx-c></mjx-mn></mjx-script></mjx-msup></mjx-math><mjx-assistive-mml unselectable="on" display="inline"><math xmlns="http://www.w3.org/1998/Math/MathML"><mrow data-mjx-texclass="ORD"><mi mathvariant="bold">x</mi></mrow><mo>∈</mo><msup><mrow data-mjx-texclass="ORD"><mi mathvariant="double-struck">R</mi></mrow><mn>3</mn></msup></math></mjx-assistive-mml></mjx-container>
-                                (positional encoding with <mjx-container class="MathJax CtxtMenu_Attached_0" jax="CHTML" tabindex="0" ctxtmenu_counter="31" style="font-size: 113.1%; position: relative;"><mjx-math class="MJX-TEX" aria-hidden="true"><mjx-mi class="mjx-i"><mjx-c class="mjx-c1D43F TEX-I"></mjx-c></mjx-mi><mjx-mo class="mjx-n" space="4"><mjx-c class="mjx-c3D"></mjx-c></mjx-mo><mjx-mn class="mjx-n" space="4"><mjx-c class="mjx-c31"></mjx-c><mjx-c class="mjx-c30"></mjx-c></mjx-mn></mjx-math><mjx-assistive-mml unselectable="on" display="inline"><math xmlns="http://www.w3.org/1998/Math/MathML"><mi>L</mi><mo>=</mo><mn>10</mn></math></mjx-assistive-mml></mjx-container>)</li>
+                                (PE with <mjx-container class="MathJax CtxtMenu_Attached_0" jax="CHTML" tabindex="0" ctxtmenu_counter="31" style="font-size: 113.1%; position: relative;"><mjx-math class="MJX-TEX" aria-hidden="true"><mjx-mi class="mjx-i"><mjx-c class="mjx-c1D43F TEX-I"></mjx-c></mjx-mi><mjx-mo class="mjx-n" space="4"><mjx-c class="mjx-c3D"></mjx-c></mjx-mo><mjx-mn class="mjx-n" space="4"><mjx-c class="mjx-c31"></mjx-c><mjx-c class="mjx-c30"></mjx-c></mjx-mn></mjx-math><mjx-assistive-mml unselectable="on" display="inline"><math xmlns="http://www.w3.org/1998/Math/MathML"><mi>L</mi><mo>=</mo><mn>10</mn></math></mjx-assistive-mml></mjx-container>)</li>
                             <li>View direction <mjx-container class="MathJax CtxtMenu_Attached_0" jax="CHTML" tabindex="0" ctxtmenu_counter="32" style="font-size: 113.1%; position: relative;"><mjx-math class="MJX-TEX" aria-hidden="true"><mjx-texatom texclass="ORD"><mjx-mi class="mjx-b"><mjx-c class="mjx-c1D41D TEX-B"></mjx-c></mjx-mi></mjx-texatom><mjx-mo class="mjx-n" space="4"><mjx-c class="mjx-c2208"></mjx-c></mjx-mo><mjx-msup space="4"><mjx-texatom texclass="ORD"><mjx-mi class="mjx-ds mjx-b"><mjx-c class="mjx-c211D TEX-A"></mjx-c></mjx-mi></mjx-texatom><mjx-script style="vertical-align: 0.363em;"><mjx-mn class="mjx-n" size="s"><mjx-c class="mjx-c33"></mjx-c></mjx-mn></mjx-script></mjx-msup></mjx-math><mjx-assistive-mml unselectable="on" display="inline"><math xmlns="http://www.w3.org/1998/Math/MathML"><mrow data-mjx-texclass="ORD"><mi mathvariant="bold">d</mi></mrow><mo>∈</mo><msup><mrow data-mjx-texclass="ORD"><mi mathvariant="double-struck">R</mi></mrow><mn>3</mn></msup></math></mjx-assistive-mml></mjx-container>
-                                (positional encoding with <mjx-container class="MathJax CtxtMenu_Attached_0" jax="CHTML" tabindex="0" ctxtmenu_counter="33" style="font-size: 113.1%; position: relative;"><mjx-math class="MJX-TEX" aria-hidden="true"><mjx-mi class="mjx-i"><mjx-c class="mjx-c1D43F TEX-I"></mjx-c></mjx-mi><mjx-mo class="mjx-n" space="4"><mjx-c class="mjx-c3D"></mjx-c></mjx-mo><mjx-mn class="mjx-n" space="4"><mjx-c class="mjx-c34"></mjx-c></mjx-mn></mjx-math><mjx-assistive-mml unselectable="on" display="inline"><math xmlns="http://www.w3.org/1998/Math/MathML"><mi>L</mi><mo>=</mo><mn>4</mn></math></mjx-assistive-mml></mjx-container>)</li>
+                                (PE with <mjx-container class="MathJax CtxtMenu_Attached_0" jax="CHTML" tabindex="0" ctxtmenu_counter="33" style="font-size: 113.1%; position: relative;"><mjx-math class="MJX-TEX" aria-hidden="true"><mjx-mi class="mjx-i"><mjx-c class="mjx-c1D43F TEX-I"></mjx-c></mjx-mi><mjx-mo class="mjx-n" space="4"><mjx-c class="mjx-c3D"></mjx-c></mjx-mo><mjx-mn class="mjx-n" space="4"><mjx-c class="mjx-c34"></mjx-c></mjx-mn></mjx-math><mjx-assistive-mml unselectable="on" display="inline"><math xmlns="http://www.w3.org/1998/Math/MathML"><mi>L</mi><mo>=</mo><mn>4</mn></math></mjx-assistive-mml></mjx-container>)</li>
                         </ul>
                     </li>
                     <li><strong>MLP Structure:</strong>
                         <ul>
-                            <li>Input layer: 60 → 256 (60 = 3 + 3×2×10 for
-                                position encoding)</li>
-                            <li>Hidden layers: 256 → 256 (8 layers)</li>
-                            <li>Density head: 256 → 1 (with ReLU to ensure
-                                non-negative density)</li>
+                            <li>Input layer: 60 → 256 </li>
+                            <li>Hidden layers: 8</li>
+                            <li>Density head: 256 → 1 (ReLU)</li>
                             <li>Feature layer: 256 → 256</li>
-                            <li>View-dependent color head: 256 + 27 → 128 → 3
-                                (27 = 3 + 3×2×4 for view encoding, output
-                                with Sigmoid)</li>
                         </ul>
                     </li>
                     <li><strong>Skip Connections:</strong> Input (after PE) is
@@ -645,31 +642,27 @@
                         help the network remember input features</li>
                     <li><strong>Outputs:</strong>
                         <ul>
-                            <li>Density <mjx-container class="MathJax CtxtMenu_Attached_0" jax="CHTML" tabindex="0" ctxtmenu_counter="34" style="font-size: 113.1%; position: relative;"><mjx-math class="MJX-TEX" aria-hidden="true"><mjx-mi class="mjx-i"><mjx-c class="mjx-c1D70E TEX-I"></mjx-c></mjx-mi></mjx-math><mjx-assistive-mml unselectable="on" display="inline"><math xmlns="http://www.w3.org/1998/Math/MathML"><mi>σ</mi></math></mjx-assistive-mml></mjx-container> (volume density, controls
-                                opacity)</li>
-                            <li>Color <mjx-container class="MathJax CtxtMenu_Attached_0" jax="CHTML" tabindex="0" ctxtmenu_counter="35" style="font-size: 113.1%; position: relative;"><mjx-math class="MJX-TEX" aria-hidden="true"><mjx-texatom texclass="ORD"><mjx-mi class="mjx-b"><mjx-c class="mjx-c1D41C TEX-B"></mjx-c></mjx-mi></mjx-texatom></mjx-math><mjx-assistive-mml unselectable="on" display="inline"><math xmlns="http://www.w3.org/1998/Math/MathML"><mrow data-mjx-texclass="ORD"><mi mathvariant="bold">c</mi></mrow></math></mjx-assistive-mml></mjx-container> (RGB, view-dependent)</li>
+                            <li>density <mjx-container class="MathJax CtxtMenu_Attached_0" jax="CHTML" tabindex="0" ctxtmenu_counter="34" style="font-size: 113.1%; position: relative;"><mjx-math class="MJX-TEX" aria-hidden="true"><mjx-mi class="mjx-i"><mjx-c class="mjx-c1D70E TEX-I"></mjx-c></mjx-mi></mjx-math><mjx-assistive-mml unselectable="on" display="inline"><math xmlns="http://www.w3.org/1998/Math/MathML"><mi>σ</mi></math></mjx-assistive-mml></mjx-container> 
+                                </li>
+                            <li>color <mjx-container class="MathJax CtxtMenu_Attached_0" jax="CHTML" tabindex="0" ctxtmenu_counter="35" style="font-size: 113.1%; position: relative;"><mjx-math class="MJX-TEX" aria-hidden="true"><mjx-texatom texclass="ORD"><mjx-mi class="mjx-b"><mjx-c class="mjx-c1D41C TEX-B"></mjx-c></mjx-mi></mjx-texatom></mjx-math><mjx-assistive-mml unselectable="on" display="inline"><math xmlns="http://www.w3.org/1998/Math/MathML"><mrow data-mjx-texclass="ORD"><mi mathvariant="bold">c</mi></mrow></math></mjx-assistive-mml></mjx-container> </li>
                         </ul>
                     </li>
                 </ul>
             </div>
 
+            
+
             <div class="technical-details">
-                <h4>Key Design Choices</h4>
+                <h4>Details</h4>
                 <ul>
-                    <li><strong>View-dependent color:</strong> The color depends
-                        on both position and viewing direction,
-                        enabling realistic view-dependent effects like specular
-                        highlights.</li>
                     <li><strong>Skip connections:</strong> Injecting the encoded
-                        input into the middle of the network
-                        helps prevent the network from "forgetting" the input
-                        coordinates, which is important for deep
-                        networks.</li>
+                        input into the net
+                        helps prevent the it from losing input
+                        coordinates</li>
                     <li><strong>Separate encoding frequencies:</strong> Position
                         uses higher frequency encoding (L=10)
-                        to capture fine geometric details, while view direction
-                        uses lower frequency (L=4) since view
-                        effects are typically smoother.</li>
+                        to capture finer details, while view direction
+                        uses lower frequency</li>
                 </ul>
             </div>
 
@@ -715,11 +708,11 @@
 
             <h4>Training Progression</h4>
             <p>
-                The network gradually learns to represent the 3D scene. Early
-                iterations show blurry, low-frequency
+                The network gradually learns the 3D representation. Early
+                iterations are supposed to contain blurry, low-frequency
                 reconstructions, while later iterations capture fine details:
             </p>
-
+<!-- 
             <div class="image-grid" style="grid-template-columns: repeat(5, 1fr);">
                 <div class="image-container">
                     <img src="results/nerf_training/train_images/train_step_0000.png" alt="Step 0">
@@ -741,15 +734,15 @@
                     <img src="results/nerf_training/train_images/train_step_0999.png" alt="Step 999">
                     <div class="image-caption">Iteration 999</div>
                 </div>
-            </div>
+            </div> -->
 
-            <h4>Validation Set Results</h4>
+            <!-- <h4>Validation Set Results</h4>
             <p>
                 Validation images show how well the NeRF generalizes to unseen
                 camera poses:
-            </p>
+            </p> -->
 
-            <div class="image-grid" style="grid-template-columns: repeat(5, 1fr);">
+            <!-- <div class="image-grid" style="grid-template-columns: repeat(5, 1fr);">
                 <div class="image-container">
                     <img src="results/nerf_training/val_images/val_step_0000.png" alt="Val Step 0">
                     <div class="image-caption">Iteration 0</div>
@@ -770,48 +763,42 @@
                     <img src="results/nerf_training/val_images/val_step_0999.png" alt="Val Step 999">
                     <div class="image-caption">Iteration 999</div>
                 </div>
-            </div>
+            </div> -->
 
             <h4>PSNR on Validation Set</h4>
             <div class="image-container span-all">
-                <img src="results/nerf_training/training_curves.png" alt="NeRF Training Curves" class="large-image">
+                <img src="part1_images/psnr_curve.png" alt="NeRF Training Curves" class="large-image">
                 <div class="image-caption">Training Loss and Validation PSNR
                     Curves</div>
             </div>
 
             <p>
-                The validation PSNR reaches above 23 dB, meeting the project
-                requirements. The loss decreases
-                consistently, and the PSNR improves steadily, indicating
-                successful training.
+                The validation PSNR was between 10-12 dB.
             </p>
 
-            <h4>Novel View Synthesis</h4>
+            <!-- <h4>Novel View Synthesis</h4> -->
             <p>
-                After training, I rendered novel views using the test camera
-                poses. The NeRF successfully synthesizes
-                photorealistic views from arbitrary camera positions:
+                After training, I rendered the views using the test camera
+                poses. 
             </p>
 
-            <div class="image-container span-all">
+            <!-- <div class="image-container span-all">
                 <img src="results/nerf_training/novel_views_sample.png" alt="Novel Views Sample" class="large-image">
                 <div class="image-caption">Sample Novel Views from Test Cameras
                 </div>
-            </div>
+            </div> -->
 
             <h4>Spherical Rendering Video</h4>
             <p>
-                I created a video showing the Lego scene from a spherical camera
-                path, demonstrating smooth novel view
-                synthesis:
+            
             </p>
 
             <div class="video-container">
                 <video controls="">
-                    <source src="results/nerf_training/nerf_novel_views.mp4" type="video/mp4">
-                    Your browser does not support the video tag.
+                    <source src="part1_images/lego_spherical_render.mp4" type="video/mp4">
+                    
                 </video>
-                <div class="image-caption">Spherical Rendering of Lego Scene
+                <div class="image-caption">Spherical Render
                 </div>
             </div>
         </div>
@@ -821,37 +808,32 @@
             <h2>Part 2.6: Training with Your Own Data</h2>
 
             <p>
-                I trained a NeRF on my own captured dataset (the purple
-                penguin). This
-                required several adjustments from the
-                Lego dataset:
+                I trained a NeRF on the lafufus. 
             </p>
 
             <div class="highlight">
-                <h4>Key Changes for Real Data</h4>
+                <h4>Key Changes</h4>
                 <ul>
-                    <li><strong>Near/Far Planes:</strong> Adjusted from (2.0,
-                        6.0) to (0.02, 0.5) meters to match the
+                    <li><strong>Near/Far Planes:</strong> Adjusted to (0.02, 0.5) meters to match the
                         scale of my object</li>
                     <li><strong>Training Iterations:</strong> Trained for 2000
-                        iterations instead to achieve good quality</li>
-                    <li><strong>Batched Inference:</strong> Used batched
-                        inference for training to avoid memory errors</li>
+                        iterations </li>
+         
                 </ul>
             </div>
 
-            <h3>Training Progression</h3>
+            <h3>Training Loss Curve</h3>
             <p>
-                The training shows gradual improvement in reconstruction
-                quality:
+                <!-- The training shows gradual improvement in reconstruction
+                quality: -->
             </p>
 
             <div class="image-grid" style="grid-template-columns: repeat(5, 1fr);">
                 <div class="image-container">
-                    <img src="results/my_training/train_images/train_step_0000.png" alt="My Train Step 0">
-                    <div class="image-caption">Iteration 0</div>
+                    <img src="part1_images/lafufu_training_loss_curve.png" alt="My Train Step 0">
+                    <div class="image-caption">Loss Curve</div>
                 </div>
-                <div class="image-container">
+                <!-- <div class="image-container">
                     <img src="results/my_training/train_images/train_step_0500.png" alt="My Train Step 500">
                     <div class="image-caption">Iteration 500</div>
                 </div>
@@ -866,16 +848,16 @@
                 <div class="image-container">
                     <img src="results/my_training/train_images/train_step_1999.png" alt="My Train Step 2000">
                     <div class="image-caption">Iteration 2000</div>
-                </div>
+                </div> -->
             </div>
 
-            <h3>Validation Results</h3>
+            <h3> PSNR </h3>
             <div class="image-grid" style="grid-template-columns: repeat(5, 1fr);">
                 <div class="image-container">
-                    <img src="results/my_training/val_images/val_step_0000.png" alt="My Val Step 0">
-                    <div class="image-caption">Iteration 0</div>
+                    <img src="part1_images/psnr_labbub.png"My Val Step 0">
+                    <div class="image-caption">PSNR</div>
                 </div>
-                <div class="image-container">
+                <!-- <div class="image-container">
                     <img src="results/my_training/val_images/val_step_0500.png" alt="My Val Step 500">
                     <div class="image-caption">Iteration 500</div>
                 </div>
@@ -890,20 +872,18 @@
                 <div class="image-container">
                     <img src="results/my_training/val_images/val_step_1999.png" alt="My Val Step 2000">
                     <div class="image-caption">Iteration 2000</div>
-                </div>
+                </div> -->
             </div>
 
-            <h3>Training Loss Curve</h3>
+            <h3>Training Progression</h3>
             <div class="image-container span-all">
-                <img src="results/my_training/training_curves.png" alt="My Training Curves" class="large-image">
-                <div class="image-caption">Training Loss Over Iterations</div>
+                <img src="part1_images/lafufu_trainprog.png" alt="My Training Curves" class="large-image">
+                <div class="image-caption">Progression</div>
             </div>
 
             <p>
-                The training loss decreases steadily, showing successful
-                optimization. The network learns to represent
-                the 3D structure and appearance of the shoe from the multi-view
-                images.
+                The training loss decreases over time. The network learns to represent
+                the 3D structure.
             </p>
 
             <h3>Novel View Rendering</h3>
@@ -913,12 +893,12 @@
             </p>
 
             <div class="gif-container">
-                <img src="results/my_training/nerf_circle.gif" alt="Novel View Circle">
-                <div class="image-caption">Novel Views from Circular Camera Path
+                <img src="part1_images/lafufu.gif" alt="Novel View Circle">
+                <div class="image-caption"> gif
                 </div>
             </div>
 
-            <div class="technical-details">
+            <!-- <div class="technical-details">
                 <h4>Rendering Details</h4>
                 <p>
                     The circular path was generated by:
@@ -939,11 +919,12 @@
                     the views where the tag was hidden; those views were not
                     part of the training set.
                 </p>
-            </div>
+            </div> -->
         </div>
 
         <!-- Conclusion -->
-        <div class="section">
+
+        <!-- <div class="section">
             <h2>Conclusion</h2>
             <p>
                 This project successfully implements a complete NeRF pipeline,
@@ -975,7 +956,7 @@
                 geometry and appearance, enabling
                 photorealistic rendering from any viewpoint.
             </p>
-        </div>
+        </div> -->
     </div>
 
 
