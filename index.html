@@ -6,6 +6,140 @@
     <title>My Portfolio</title>
     <link rel="stylesheet" href="css/style.css">
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&family=Source+Serif+4:ital,wght@0,400;0,700;1,400&display=swap">
+
+
+    <link rel="stylesheet" href="../../css/style.css">
+
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+
+    <style>        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            line-height: 1.6;
+            background-color: #f8f9fa;
+            color: #333;
+            margin: 0;
+        }
+
+        main {
+            max-width: 1000px;
+            margin: auto;
+            padding: 20px;
+        }
+        
+        h1, h2, h3, h4, h5 {
+            border-bottom: 1px solid #e9ecef;
+            padding-bottom: 10px;
+            margin-top: 40px;
+        }
+
+        nav ul {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            list-style: none;
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+        }
+
+
+        nav a {
+            text-decoration: none;
+            color: #007bff;
+            font-weight: 500;
+        }
+        pre {
+            background-color: #f4f4f4;
+            border: 1px solid #ddd;
+            border-left: 3px solid #007bff;
+            padding: 1em 1.5em;
+            overflow-x: auto;
+            font-size: 0.9em;
+            border-radius: 4px;
+        }
+
+        code {
+            font-family: "SF Mono", "Fira Code", "Courier New", Courier, monospace;
+        }
+
+        .image-grid, .grid-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 20px;
+            margin: 30px 0;
+            text-align: center;
+        }
+
+        .image-grid figure, .grid-item {
+            margin: 0;
+            text-align: center;
+            background-color: #ffffff;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.05);
+            transition: box-shadow 0.3s ease;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .image-grid figure:hover {
+            box-shadow: 0 6px 12px rgba(0,0,0,0.1);
+        }
+
+        .image-grid img, .grid-item img {
+            width: 100%;
+            height: auto;
+            display: block;
+        }
+
+        figcaption, .grid-item p {
+            padding: 10px 15px;
+            font-style: italic;
+            font-size: 0.9em;
+            color: #555;
+            background-color: #fdfdfd;
+        }
+
+        .grid-item-full-width {
+            grid-column: 1 / -1;
+        }
+
+        .button {
+            display: inline-block;
+            background-color: #007bff;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 5px;
+            text-decoration: none;
+            margin-top: 15px;
+        }
+          .equation {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 20px;
+    margin-top: 30px;
+  }
+  .matrix {
+    display: inline-block;
+    border: 1px solid #ccc;
+    padding: 10px 15px;
+    background-color: #fff;
+    border-radius: 6px;
+  }
+  .matrix pre {
+    margin: 0;
+    font-size: 13px;
+    white-space: pre;
+  }
+  .symbol {
+    font-size: 22px;
+    font-weight: bold;
+  }
+    </style>
+
 </head>
 <body>
     <header>

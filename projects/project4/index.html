@@ -1,0 +1,982 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Project: Mosaics</title>
+    <link rel="stylesheet" href="../../css/style.css">
+
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+
+    <style>        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            line-height: 1.6;
+            background-color: #f8f9fa;
+            color: #333;
+            margin: 0;
+        }
+
+        main {
+            max-width: 1000px;
+            margin: auto;
+            padding: 20px;
+        }
+        
+        h1, h2, h3, h4, h5 {
+            border-bottom: 1px solid #e9ecef;
+            padding-bottom: 10px;
+            margin-top: 40px;
+        }
+
+        nav ul {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            list-style: none;
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+        }
+
+
+        nav a {
+            text-decoration: none;
+            color: #007bff;
+            font-weight: 500;
+        }
+        pre {
+            background-color: #f4f4f4;
+            border: 1px solid #ddd;
+            border-left: 3px solid #007bff;
+            padding: 1em 1.5em;
+            overflow-x: auto;
+            font-size: 0.9em;
+            border-radius: 4px;
+        }
+
+        code {
+            font-family: "SF Mono", "Fira Code", "Courier New", Courier, monospace;
+        }
+
+        .image-grid, .grid-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 20px;
+            margin: 30px 0;
+            text-align: center;
+        }
+
+        .image-grid figure, .grid-item {
+            margin: 0;
+            text-align: center;
+            background-color: #ffffff;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.05);
+            transition: box-shadow 0.3s ease;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .image-grid figure:hover {
+            box-shadow: 0 6px 12px rgba(0,0,0,0.1);
+        }
+
+        .image-grid img, .grid-item img {
+            width: 100%;
+            height: auto;
+            display: block;
+        }
+
+        figcaption, .grid-item p {
+            padding: 10px 15px;
+            font-style: italic;
+            font-size: 0.9em;
+            color: #555;
+            background-color: #fdfdfd;
+        }
+
+        .grid-item-full-width {
+            grid-column: 1 / -1;
+        }
+
+        .button {
+            display: inline-block;
+            background-color: #007bff;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 5px;
+            text-decoration: none;
+            margin-top: 15px;
+        }
+          .equation {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 20px;
+    margin-top: 30px;
+  }
+  .matrix {
+    display: inline-block;
+    border: 1px solid #ccc;
+    padding: 10px 15px;
+    background-color: #fff;
+    border-radius: 6px;
+  }
+  .matrix pre {
+    margin: 0;
+    font-size: 13px;
+    white-space: pre;
+  }
+  .symbol {
+    font-size: 22px;
+    font-weight: bold;
+  }
+
+  .image-container {
+  background-color: #fff;
+  border-radius: 8px;
+  box-shadow: 0 4px 8px rgba(0,0,0,0.05);
+  padding: 10px;
+  transition: box-shadow 0.3s ease;
+}
+
+.image-container:hover {
+  box-shadow: 0 6px 12px rgba(0,0,0,0.1);
+}
+
+.image-caption {
+  margin-top: 8px;
+  font-style: italic;
+  font-size: 0.9em;
+  color: #555;
+}
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h1>Project 4: Neural Radiance Field (NeRF)</h1>
+
+        <div class="section">
+            <h2>Overview</h2>
+            <p>This project investigates Neural Radiance Fields (NeRF), an innovative method for representing 3D scenes and generating novel viewpoints. NeRF leverages a neural network to model a continuous volumetric scene, mapping 3D spatial coordinates and viewing directions to corresponding color and density values. By applying inverse rendering techniques to calibrated multi-view images, we can train the network to produce renderings from unseen perspectives. </p>
+        </div>
+
+        <!-- Part 0: Camera Calibration and 3D Scanning -->
+        <div class="section">
+            <h2>Part 0: Calibrating Your Camera and Capturing a 3D Scan</h2>
+
+            <h3>Part 0.1: Calibrating Your Camera</h3>
+            <p>
+                The first step in building a NeRF is to calibrate the camera to
+                understand its intrinsic parameters
+                (focal length, principal point) and distortion coefficients. We
+                use ArUco tags, which are visual
+                tracking targets that provide reliable detection of 3D keypoints
+                across different images.
+            </p>
+
+            <div class="technical-details">
+                <h4>Calibration Pipeline</h4>
+                <ol>
+                    <li><strong>Image Capture:</strong> Captured 30-50 images of
+                        ArUco calibration tags from various
+                        angles and distances, keeping the zoom level constant.
+                    </li>
+                    <li><strong>Tag Detection:</strong> Used OpenCV's ArUco
+                        detector to find tags in each image and
+                        extract corner coordinates.</li>
+                    <li><strong>3D-2D Correspondence:</strong> Established
+                        correspondences between detected 2D corners
+                        and known 3D world coordinates (assuming the tag is the
+                        world origin, with corners at known
+                        physical dimensions).</li>
+                    <li><strong>Calibration:</strong> Used
+                        <code>cv2.calibrateCamera()</code> to compute camera
+                        intrinsics matrix <mjx-container class="MathJax CtxtMenu_Attached_0" jax="CHTML" tabindex="0" ctxtmenu_counter="0" style="font-size: 113.1%; position: relative;"><mjx-math class="MJX-TEX" aria-hidden="true"><mjx-mi class="mjx-i"><mjx-c class="mjx-c1D43E TEX-I"></mjx-c></mjx-mi></mjx-math><mjx-assistive-mml unselectable="on" display="inline"><math xmlns="http://www.w3.org/1998/Math/MathML"><mi>K</mi></math></mjx-assistive-mml></mjx-container> and distortion coefficients.
+                    </li>
+                </ol>
+                <p>
+                    The calibration process handles cases where tags aren't
+                    detected in some images by skipping those
+                    images and only using successful detections. This robustness
+                    is crucial for real-world data
+                    collection.
+                </p>
+                            <div class="image-grid" style="grid-template-columns: repeat(3, 1fr);">
+
+                    <div class="image-container">
+                    <img src="calibration_images/IMG_5251.jpg" alt="Scan Image 1">
+                    <div class="image-caption">Sample Calibration Image</div>
+                </div>
+                                    <div class="image-container">
+                    <img src="calibration_images/IMG_5254.jpg" alt="Scan Image 1">
+                    <div class="image-caption">Sample Calibration Image</div>
+                </div>
+                                </div>
+
+            </div>
+
+            <h3>Part 0.2: Capturing a 3D Object Scan</h3>
+            <p>
+                For this project, I captured a 3D scan of a portable charger using
+                a
+                single ArUco tag placed next to the object.
+                I captured 40 images from different angles,
+                following best practices:
+            </p>
+
+            <div class="image-grid" style="grid-template-columns: repeat(3, 1fr);">
+                <div class="image-container">
+                    <img src="obj_images_compressed/IMG_5315.jpg" alt="Scan Image 1">
+                    <div class="image-caption">Sample Image 1</div>
+                </div>
+                <div class="image-container">
+                    <img src="obj_images_compressed/IMG_5305.jpg" alt="Scan Image 2">
+                    <div class="image-caption">Sample Image 2</div>
+                </div>
+                <div class="image-container">
+                    <img src="obj_images_compressed/IMG_5310.jpg" alt="Scan Image 3">
+                    <div class="image-caption">Sample Image 3</div>
+                </div>
+            </div>
+
+            <h3>Part 0.3: Estimating Camera Pose</h3>
+            <p>
+                With calibrated camera intrinsics, I estimated the camera pose
+                (position and orientation) for each image
+                using the Perspective-n-Point (PnP) problem. For each image, I:
+            </p>
+            <ol>
+                <li>Detected the ArUco tag using
+                    <code>cv2.aruco.detectMarkers()</code>
+                </li>
+                <li>Used <code>cv2.solvePnP()</code> to estimate the camera's
+                    extrinsic parameters (rotation and
+                    translation) relative to the tag's coordinate system</li>
+                <li>Converted the world-to-camera transformation to
+                    camera-to-world (c2w) for visualization and NeRF
+                    training</li>
+            </ol>
+
+            <div class="technical-details">
+                <h4>PnP Problem</h4>
+                <p>
+                    Given 3D points in world coordinates and their 2D
+                    projections in an image, PnP solves for the
+                    camera's pose. The transformation from world to camera
+                    coordinates is:
+                    <mjx-container class="MathJax CtxtMenu_Attached_0" jax="CHTML" display="true" tabindex="0" ctxtmenu_counter="1" style="font-size: 113.1%; position: relative;"><mjx-math display="true" class="MJX-TEX" aria-hidden="true" style="margin-left: 0px; margin-right: 0px;"><mjx-msub><mjx-texatom texclass="ORD"><mjx-mi class="mjx-b"><mjx-c class="mjx-c1D431 TEX-B"></mjx-c></mjx-mi></mjx-texatom><mjx-script style="vertical-align: -0.15em;"><mjx-mi class="mjx-i" size="s"><mjx-c class="mjx-c1D450 TEX-I"></mjx-c></mjx-mi></mjx-script></mjx-msub><mjx-mo class="mjx-n" space="4"><mjx-c class="mjx-c3D"></mjx-c></mjx-mo><mjx-texatom space="4" texclass="ORD"><mjx-mi class="mjx-b"><mjx-c class="mjx-c1D411 TEX-B"></mjx-c></mjx-mi></mjx-texatom><mjx-msub><mjx-texatom texclass="ORD"><mjx-mi class="mjx-b"><mjx-c class="mjx-c1D431 TEX-B"></mjx-c></mjx-mi></mjx-texatom><mjx-script style="vertical-align: -0.15em;"><mjx-mi class="mjx-i" size="s"><mjx-c class="mjx-c1D464 TEX-I"></mjx-c></mjx-mi></mjx-script></mjx-msub><mjx-mo class="mjx-n" space="3"><mjx-c class="mjx-c2B"></mjx-c></mjx-mo><mjx-texatom space="3" texclass="ORD"><mjx-mi class="mjx-b"><mjx-c class="mjx-c1D42D TEX-B"></mjx-c></mjx-mi></mjx-texatom></mjx-math><mjx-assistive-mml unselectable="on" display="block"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><msub><mrow data-mjx-texclass="ORD"><mi mathvariant="bold">x</mi></mrow><mi>c</mi></msub><mo>=</mo><mrow data-mjx-texclass="ORD"><mi mathvariant="bold">R</mi></mrow><msub><mrow data-mjx-texclass="ORD"><mi mathvariant="bold">x</mi></mrow><mi>w</mi></msub><mo>+</mo><mrow data-mjx-texclass="ORD"><mi mathvariant="bold">t</mi></mrow></math></mjx-assistive-mml></mjx-container>
+                    where <mjx-container class="MathJax CtxtMenu_Attached_0" jax="CHTML" tabindex="0" ctxtmenu_counter="2" style="font-size: 113.1%; position: relative;"><mjx-math class="MJX-TEX" aria-hidden="true"><mjx-texatom texclass="ORD"><mjx-mi class="mjx-b"><mjx-c class="mjx-c1D411 TEX-B"></mjx-c></mjx-mi></mjx-texatom></mjx-math><mjx-assistive-mml unselectable="on" display="inline"><math xmlns="http://www.w3.org/1998/Math/MathML"><mrow data-mjx-texclass="ORD"><mi mathvariant="bold">R</mi></mrow></math></mjx-assistive-mml></mjx-container> is the rotation matrix and <mjx-container class="MathJax CtxtMenu_Attached_0" jax="CHTML" tabindex="0" ctxtmenu_counter="3" style="font-size: 113.1%; position: relative;"><mjx-math class="MJX-TEX" aria-hidden="true"><mjx-texatom texclass="ORD"><mjx-mi class="mjx-b"><mjx-c class="mjx-c1D42D TEX-B"></mjx-c></mjx-mi></mjx-texatom></mjx-math><mjx-assistive-mml unselectable="on" display="inline"><math xmlns="http://www.w3.org/1998/Math/MathML"><mrow data-mjx-texclass="ORD"><mi mathvariant="bold">t</mi></mrow></math></mjx-assistive-mml></mjx-container>
+                    is the translation vector. The inverse
+                    transformation (c2w) is used for NeRF training.
+                </p>
+            </div>
+
+            <h3>Part 0.4: Camera Frustum Visualization</h3>
+            <p>
+                I visualized the camera poses using Viser, which shows the
+                camera frustums and their positions in 3D
+                space. This visualization helps verify that the pose estimation
+                is correct and that cameras are
+                distributed well around the object.
+            </p>
+
+            <div class="image-grid" style="grid-template-columns: repeat(2, 1fr);">
+                <div class="image-container">
+                    <img src="calibration_images/frustum_down2.png" alt="Camera Frustums View 1">
+                    <div class="image-caption">Camera Frustums Visualization -
+                        View 1</div>
+                </div>
+                <div class="image-container">
+                    <img src="calibration_images/frustumtop.png" alt="Camera Frustums View 2">
+                    <div class="image-caption">Camera Frustums Visualization -
+                        View 2</div>
+                </div>
+            </div>
+
+            <p>
+                <!-- The visualizations show cameras arranged in a semi-circular arc
+                around the object, with each camera
+                frustum displaying the corresponding captured image. This
+                confirms that the pose estimation successfully
+                recovered the camera positions and orientations. -->
+            </p>
+
+            <h3>Part 0.5: Undistorting Images and Creating Dataset</h3>
+            <p>
+                Before training, I undistorted all images with
+                <code>cv2.undistort()</code> to remove lens
+                distortion, as NeRF assumes a pinhole camera. I
+                handled black boundaries that can
+                appear after undistort by using
+                <code>cv2.getOptimalNewCameraMatrix()</code> and updating the
+                principal point to account for any cropping.
+            </p>
+            <p>Note: I resized the calibration images to be under 1000 px, so I had to do the same for object images in all parts of the project to ensure consistency.</p>
+
+            <p>
+                We save the dataset as a npz file. It contains
+            </p>
+            <ul>
+                <li><code>images_train</code>: Training images (N_train, H, W,
+                    3) in 0-255 range</li>
+                <li><code>c2ws_train</code>: Camera-to-world transformation
+                    matrices (N_train, 4, 4)</li>
+                <li><code>images_val</code>: Validation images (N_val, H, W, 3)
+                </li>
+                <li><code>c2ws_val</code>: Validation camera poses (N_val, 4, 4)
+                </li>
+                <li><code>c2ws_test</code>: Test camera poses for novel view
+                    rendering (N_test, 4, 4)</li>
+                <li><code>focal</code>: Camera focal length (float)</li>
+            </ul>
+        </div>
+
+        <!-- Part 1: Fit a Neural Field to a 2D Image -->
+        <div class="section">
+            <h2>Part 1: Fit a Neural Field to a 2D Image</h2>
+
+            <p>
+                Before tackling 3D NeRF, we can tacke the 2D problem:
+                fitting a neural field to represent a
+                single 2D image. This helps us understand the core concepts of
+                neural fields, positional encoding, and
+                the training process.
+            </p>
+
+            <h3>Network Architecture</h3>
+            <div class="architecture-box">
+                <h4>Model Architecture</h4>
+                <ul>
+                    <li><strong>Input:</strong> 2D pixel coordinates (x, y)
+                        normalized to [0, 1]</li>
+                    <li><strong>Positional Encoding:</strong> Sinusoidal
+                        encoding with max frequency <mjx-container class="MathJax CtxtMenu_Attached_0" jax="CHTML" tabindex="0" ctxtmenu_counter="4" style="font-size: 113.1%; position: relative;"><mjx-math class="MJX-TEX" aria-hidden="true"><mjx-mi class="mjx-i"><mjx-c class="mjx-c1D43F TEX-I"></mjx-c></mjx-mi><mjx-mo class="mjx-n" space="4"><mjx-c class="mjx-c3D"></mjx-c></mjx-mo><mjx-mn class="mjx-n" space="4"><mjx-c class="mjx-c31"></mjx-c><mjx-c class="mjx-c30"></mjx-c></mjx-mn></mjx-math><mjx-assistive-mml unselectable="on" display="inline"><math xmlns="http://www.w3.org/1998/Math/MathML"><mi>L</mi><mo>=</mo><mn>10</mn></math></mjx-assistive-mml></mjx-container> (maps 2D to
+                        42D)</li>
+                    <li><strong>MLP Structure:</strong>
+                        <ul>
+                            <li>Input layer: 42 → 256</li>
+                            <li>Hidden layers: 256 → 256 (4 layers)</li>
+                            <li>Output layer: 256 → 3 (RGB)</li>
+                            <li>Activation: ReLU for hidden layers, Sigmoid for
+                                output</li>
+                        </ul>
+                    </li>
+                    <li><strong>Learning Rate:</strong> 1e-2</li>
+                    <li><strong>Optimizer:</strong> Adam</li>
+                    <li><strong>Batch Size:</strong> 10,000 pixels per iteration
+                    </li>
+                    <li><strong>Training Iterations:</strong> 2000-3000</li>
+                </ul>
+            </div>
+
+            <div class="technical-details">
+                <h4>Sinusoidal Positional Encoding</h4>
+                <p>
+                    Positional encoding expands the input dimensionality using
+                    sinusoidal functions:
+                    <mjx-container class="MathJax CtxtMenu_Attached_0" jax="CHTML" display="true" tabindex="0" ctxtmenu_counter="5" style="font-size: 113.1%; position: relative;"><mjx-math display="true" class="MJX-TEX" aria-hidden="true" style="margin-left: 0px; margin-right: 0px;"><mjx-mi class="mjx-i"><mjx-c class="mjx-c1D6FE TEX-I"></mjx-c></mjx-mi><mjx-mo class="mjx-n"><mjx-c class="mjx-c28"></mjx-c></mjx-mo><mjx-texatom texclass="ORD"><mjx-mi class="mjx-b"><mjx-c class="mjx-c1D429 TEX-B"></mjx-c></mjx-mi></mjx-texatom><mjx-mo class="mjx-n"><mjx-c class="mjx-c29"></mjx-c></mjx-mo><mjx-mo class="mjx-n" space="4"><mjx-c class="mjx-c3D"></mjx-c></mjx-mo><mjx-mrow space="4"><mjx-mo class="mjx-sop"><mjx-c class="mjx-c5B TEX-S1"></mjx-c></mjx-mo><mjx-mi class="mjx-n"><mjx-c class="mjx-c73"></mjx-c><mjx-c class="mjx-c69"></mjx-c><mjx-c class="mjx-c6E"></mjx-c></mjx-mi><mjx-mo class="mjx-n"><mjx-c class="mjx-c2061"></mjx-c></mjx-mo><mjx-mo class="mjx-n"><mjx-c class="mjx-c28"></mjx-c></mjx-mo><mjx-msup><mjx-mn class="mjx-n"><mjx-c class="mjx-c32"></mjx-c></mjx-mn><mjx-script style="vertical-align: 0.413em;"><mjx-mn class="mjx-n" size="s"><mjx-c class="mjx-c30"></mjx-c></mjx-mn></mjx-script></mjx-msup><mjx-mi class="mjx-i"><mjx-c class="mjx-c1D70B TEX-I"></mjx-c></mjx-mi><mjx-texatom texclass="ORD"><mjx-mi class="mjx-b"><mjx-c class="mjx-c1D429 TEX-B"></mjx-c></mjx-mi></mjx-texatom><mjx-mo class="mjx-n"><mjx-c class="mjx-c29"></mjx-c></mjx-mo><mjx-mo class="mjx-n"><mjx-c class="mjx-c2C"></mjx-c></mjx-mo><mjx-mi class="mjx-n" space="2"><mjx-c class="mjx-c63"></mjx-c><mjx-c class="mjx-c6F"></mjx-c><mjx-c class="mjx-c73"></mjx-c></mjx-mi><mjx-mo class="mjx-n"><mjx-c class="mjx-c2061"></mjx-c></mjx-mo><mjx-mo class="mjx-n"><mjx-c class="mjx-c28"></mjx-c></mjx-mo><mjx-msup><mjx-mn class="mjx-n"><mjx-c class="mjx-c32"></mjx-c></mjx-mn><mjx-script style="vertical-align: 0.413em;"><mjx-mn class="mjx-n" size="s"><mjx-c class="mjx-c30"></mjx-c></mjx-mn></mjx-script></mjx-msup><mjx-mi class="mjx-i"><mjx-c class="mjx-c1D70B TEX-I"></mjx-c></mjx-mi><mjx-texatom texclass="ORD"><mjx-mi class="mjx-b"><mjx-c class="mjx-c1D429 TEX-B"></mjx-c></mjx-mi></mjx-texatom><mjx-mo class="mjx-n"><mjx-c class="mjx-c29"></mjx-c></mjx-mo><mjx-mo class="mjx-n"><mjx-c class="mjx-c2C"></mjx-c></mjx-mo><mjx-mo class="mjx-n" space="2"><mjx-c class="mjx-c2026"></mjx-c></mjx-mo><mjx-mo class="mjx-n" space="2"><mjx-c class="mjx-c2C"></mjx-c></mjx-mo><mjx-mi class="mjx-n" space="2"><mjx-c class="mjx-c73"></mjx-c><mjx-c class="mjx-c69"></mjx-c><mjx-c class="mjx-c6E"></mjx-c></mjx-mi><mjx-mo class="mjx-n"><mjx-c class="mjx-c2061"></mjx-c></mjx-mo><mjx-mo class="mjx-n"><mjx-c class="mjx-c28"></mjx-c></mjx-mo><mjx-msup><mjx-mn class="mjx-n"><mjx-c class="mjx-c32"></mjx-c></mjx-mn><mjx-script style="vertical-align: 0.413em;"><mjx-texatom size="s" texclass="ORD"><mjx-mi class="mjx-i"><mjx-c class="mjx-c1D43F TEX-I"></mjx-c></mjx-mi><mjx-mo class="mjx-n"><mjx-c class="mjx-c2212"></mjx-c></mjx-mo><mjx-mn class="mjx-n"><mjx-c class="mjx-c31"></mjx-c></mjx-mn></mjx-texatom></mjx-script></mjx-msup><mjx-mi class="mjx-i"><mjx-c class="mjx-c1D70B TEX-I"></mjx-c></mjx-mi><mjx-texatom texclass="ORD"><mjx-mi class="mjx-b"><mjx-c class="mjx-c1D429 TEX-B"></mjx-c></mjx-mi></mjx-texatom><mjx-mo class="mjx-n"><mjx-c class="mjx-c29"></mjx-c></mjx-mo><mjx-mo class="mjx-n"><mjx-c class="mjx-c2C"></mjx-c></mjx-mo><mjx-mi class="mjx-n" space="2"><mjx-c class="mjx-c63"></mjx-c><mjx-c class="mjx-c6F"></mjx-c><mjx-c class="mjx-c73"></mjx-c></mjx-mi><mjx-mo class="mjx-n"><mjx-c class="mjx-c2061"></mjx-c></mjx-mo><mjx-mo class="mjx-n"><mjx-c class="mjx-c28"></mjx-c></mjx-mo><mjx-msup><mjx-mn class="mjx-n"><mjx-c class="mjx-c32"></mjx-c></mjx-mn><mjx-script style="vertical-align: 0.413em;"><mjx-texatom size="s" texclass="ORD"><mjx-mi class="mjx-i"><mjx-c class="mjx-c1D43F TEX-I"></mjx-c></mjx-mi><mjx-mo class="mjx-n"><mjx-c class="mjx-c2212"></mjx-c></mjx-mo><mjx-mn class="mjx-n"><mjx-c class="mjx-c31"></mjx-c></mjx-mn></mjx-texatom></mjx-script></mjx-msup><mjx-mi class="mjx-i"><mjx-c class="mjx-c1D70B TEX-I"></mjx-c></mjx-mi><mjx-texatom texclass="ORD"><mjx-mi class="mjx-b"><mjx-c class="mjx-c1D429 TEX-B"></mjx-c></mjx-mi></mjx-texatom><mjx-mo class="mjx-n"><mjx-c class="mjx-c29"></mjx-c></mjx-mo><mjx-mo class="mjx-sop"><mjx-c class="mjx-c5D TEX-S1"></mjx-c></mjx-mo></mjx-mrow></mjx-math><mjx-assistive-mml unselectable="on" display="block"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><mi>γ</mi><mo stretchy="false">(</mo><mrow data-mjx-texclass="ORD"><mi mathvariant="bold">p</mi></mrow><mo stretchy="false">)</mo><mo>=</mo><mrow data-mjx-texclass="INNER"><mo data-mjx-texclass="OPEN">[</mo><mi>sin</mi><mo data-mjx-texclass="NONE">⁡</mo><mo stretchy="false">(</mo><msup><mn>2</mn><mn>0</mn></msup><mi>π</mi><mrow data-mjx-texclass="ORD"><mi mathvariant="bold">p</mi></mrow><mo stretchy="false">)</mo><mo>,</mo><mi>cos</mi><mo data-mjx-texclass="NONE">⁡</mo><mo stretchy="false">(</mo><msup><mn>2</mn><mn>0</mn></msup><mi>π</mi><mrow data-mjx-texclass="ORD"><mi mathvariant="bold">p</mi></mrow><mo stretchy="false">)</mo><mo>,</mo><mo>…</mo><mo>,</mo><mi>sin</mi><mo data-mjx-texclass="NONE">⁡</mo><mo stretchy="false">(</mo><msup><mn>2</mn><mrow data-mjx-texclass="ORD"><mi>L</mi><mo>−</mo><mn>1</mn></mrow></msup><mi>π</mi><mrow data-mjx-texclass="ORD"><mi mathvariant="bold">p</mi></mrow><mo stretchy="false">)</mo><mo>,</mo><mi>cos</mi><mo data-mjx-texclass="NONE">⁡</mo><mo stretchy="false">(</mo><msup><mn>2</mn><mrow data-mjx-texclass="ORD"><mi>L</mi><mo>−</mo><mn>1</mn></mrow></msup><mi>π</mi><mrow data-mjx-texclass="ORD"><mi mathvariant="bold">p</mi></mrow><mo stretchy="false">)</mo><mo data-mjx-texclass="CLOSE">]</mo></mrow></math></mjx-assistive-mml></mjx-container>
+                    where <mjx-container class="MathJax CtxtMenu_Attached_0" jax="CHTML" tabindex="0" ctxtmenu_counter="6" style="font-size: 113.1%; position: relative;"><mjx-math class="MJX-TEX" aria-hidden="true"><mjx-mi class="mjx-i"><mjx-c class="mjx-c1D43F TEX-I"></mjx-c></mjx-mi></mjx-math><mjx-assistive-mml unselectable="on" display="inline"><math xmlns="http://www.w3.org/1998/Math/MathML"><mi>L</mi></math></mjx-assistive-mml></mjx-container> is the maximum frequency level. We also
+                    concatenate the original input, so for <mjx-container class="MathJax CtxtMenu_Attached_0" jax="CHTML" tabindex="0" ctxtmenu_counter="7" style="font-size: 113.1%; position: relative;"><mjx-math class="MJX-TEX" aria-hidden="true"><mjx-mi class="mjx-i"><mjx-c class="mjx-c1D43F TEX-I"></mjx-c></mjx-mi><mjx-mo class="mjx-n" space="4"><mjx-c class="mjx-c3D"></mjx-c></mjx-mo><mjx-mn class="mjx-n" space="4"><mjx-c class="mjx-c31"></mjx-c><mjx-c class="mjx-c30"></mjx-c></mjx-mn></mjx-math><mjx-assistive-mml unselectable="on" display="inline"><math xmlns="http://www.w3.org/1998/Math/MathML"><mi>L</mi><mo>=</mo><mn>10</mn></math></mjx-assistive-mml></mjx-container> and
+                    2D input, the encoded vector has dimension <mjx-container class="MathJax CtxtMenu_Attached_0" jax="CHTML" tabindex="0" ctxtmenu_counter="8" style="font-size: 113.1%; position: relative;"><mjx-math class="MJX-TEX" aria-hidden="true"><mjx-mn class="mjx-n"><mjx-c class="mjx-c32"></mjx-c></mjx-mn><mjx-mo class="mjx-n" space="3"><mjx-c class="mjx-c2B"></mjx-c></mjx-mo><mjx-mn class="mjx-n" space="3"><mjx-c class="mjx-c32"></mjx-c></mjx-mn><mjx-mo class="mjx-n" space="3"><mjx-c class="mjx-cD7"></mjx-c></mjx-mo><mjx-mn class="mjx-n" space="3"><mjx-c class="mjx-c32"></mjx-c></mjx-mn><mjx-mo class="mjx-n" space="3"><mjx-c class="mjx-cD7"></mjx-c></mjx-mo><mjx-mn class="mjx-n" space="3"><mjx-c class="mjx-c31"></mjx-c><mjx-c class="mjx-c30"></mjx-c></mjx-mn><mjx-mo class="mjx-n" space="4"><mjx-c class="mjx-c3D"></mjx-c></mjx-mo><mjx-mn class="mjx-n" space="4"><mjx-c class="mjx-c34"></mjx-c><mjx-c class="mjx-c32"></mjx-c></mjx-mn></mjx-math><mjx-assistive-mml unselectable="on" display="inline"><math xmlns="http://www.w3.org/1998/Math/MathML"><mn>2</mn><mo>+</mo><mn>2</mn><mo>×</mo><mn>2</mn><mo>×</mo><mn>10</mn><mo>=</mo><mn>42</mn></math></mjx-assistive-mml></mjx-container>.
+                </p>
+                <p>
+                    This encoding helps the network learn high-frequency details
+                    in the image, which is crucial for
+                    representing fine textures and edges.
+                </p>
+            </div>
+
+            <h3>Training on Provided Test Image</h3>
+            <p>
+                I trained the neural field on the provided fox image. The
+                training progression shows how the network
+                gradually learns to represent the image: these images use a
+                network width of 256 and max frequency <mjx-container class="MathJax CtxtMenu_Attached_0" jax="CHTML" tabindex="0" ctxtmenu_counter="9" style="font-size: 113.1%; position: relative;"><mjx-math class="MJX-TEX" aria-hidden="true"><mjx-mi class="mjx-i"><mjx-c class="mjx-c1D43F TEX-I"></mjx-c></mjx-mi><mjx-mo class="mjx-n" space="4"><mjx-c class="mjx-c3D"></mjx-c></mjx-mo><mjx-mn class="mjx-n" space="4"><mjx-c class="mjx-c31"></mjx-c><mjx-c class="mjx-c30"></mjx-c></mjx-mn></mjx-math><mjx-assistive-mml unselectable="on" display="inline"><math xmlns="http://www.w3.org/1998/Math/MathML"><mi>L</mi><mo>=</mo><mn>10</mn></math></mjx-assistive-mml></mjx-container>.
+            </p>
+
+  
+
+<div class="image-grid">
+  <div class="image-container">
+    <img src="part1_images/foxprogression.png" alt="Step 0">
+    <div class="image-caption">2000 Iterations</div>
+  </div>
+  <div class="image-container">
+    <img src="part1_images/fox_psnr.png" alt="Step 267">
+    <div class="image-caption">PSNR Curve</div>
+  </div>
+</div>
+
+            <p>
+                The network starts with random noise and then learns the
+                image structure. Earlier iterations capture
+                low-frequency content like colors and shapes. The
+                high-frequency details are captured as the model progresses.
+            </p>
+
+            <h3>Training on Custom Image</h3>
+            <p>
+                I also trained the network on an image of my guinea pig. The training progression
+                shows similar behavior for 256 width and <mjx-container class="MathJax CtxtMenu_Attached_0" jax="CHTML" tabindex="0" ctxtmenu_counter="10" style="font-size: 113.1%; position: relative;"><mjx-math class="MJX-TEX" aria-hidden="true"><mjx-mi class="mjx-i"><mjx-c class="mjx-c1D43F TEX-I"></mjx-c></mjx-mi><mjx-mo class="mjx-n" space="4"><mjx-c class="mjx-c3D"></mjx-c></mjx-mo><mjx-mn class="mjx-n" space="4"><mjx-c class="mjx-c31"></mjx-c><mjx-c class="mjx-c30"></mjx-c></mjx-mn></mjx-math><mjx-assistive-mml unselectable="on" display="inline"><math xmlns="http://www.w3.org/1998/Math/MathML"><mi>L</mi><mo>=</mo><mn>10</mn></math></mjx-assistive-mml></mjx-container>.:
+            </p>
+            <div class="image-grid">
+  <div class="image-container">
+    <img src="part1_images/mencho.png" alt="Step 0">
+    <div class="image-caption">2000 Iterations</div>
+  </div>
+  <div class="image-container">
+    <img src="part1_images/mencho_psnr.png" alt="Step 267">
+    <div class="image-caption">PSNR Curve</div>
+  </div>
+</div>
+
+            <h3>Hyperparameters</h3>
+            <!-- <p>
+                I explored the effect of different hyperparameters on
+                reconstruction quality. Below are results for
+                different combinations of max positional encoding frequency
+                (<mjx-container class="MathJax CtxtMenu_Attached_0" jax="CHTML" tabindex="0" ctxtmenu_counter="11" style="font-size: 113.1%; position: relative;"><mjx-math class="MJX-TEX" aria-hidden="true"><mjx-mi class="mjx-i"><mjx-c class="mjx-c1D43F TEX-I"></mjx-c></mjx-mi></mjx-math><mjx-assistive-mml unselectable="on" display="inline"><math xmlns="http://www.w3.org/1998/Math/MathML"><mi>L</mi></math></mjx-assistive-mml></mjx-container>) and network width:
+            </p> -->
+
+            <h4>Hyperparameter Grid</h4>
+            <div class="image-grid" style="grid-template-columns: repeat(2, 1fr);">
+
+                <div class="image-container">
+                    <img src="part1_images/foxL10.png" alt="L=10, Width=256">
+                    <div class="image-caption">L=10, Width=256 (High frequency,
+                        wide network)</div>
+                </div>
+            </div>
+
+            <div class="highlight">
+                <h4></h4>
+                <ul>
+                    <!-- <li><strong>Low frequency (L=4):</strong> Produces blurry
+                        results with poor high-frequency detail
+                        reconstruction. The network struggles to capture fine
+                        edges and textures.</li>
+                    <li><strong>High frequency (L=10):</strong> Enables sharp
+                        reconstruction with fine details. This is
+                        essential for photorealistic results.</li>
+                    <li><strong>Narrow network (Width=64):</strong> Limited
+                        capacity leads to smoother but less
+                        detailed outputs. Good for low-frequency content but
+                        struggles with complex textures.</li> -->
+                    <li><strong>Wide network (Width=256):</strong> This wide net allows learning of complex patterns
+                        and fine details.</li>
+                </ul>
+            </div>
+
+            <h3>PSNR Training Curve</h3>
+            <p>
+                Peak Signal-to-Noise Ratio (PSNR) measures reconstruction
+                quality. For normalized images [0, 1], PSNR is
+                computed as:
+                <mjx-container class="MathJax CtxtMenu_Attached_0" jax="CHTML" display="true" tabindex="0" ctxtmenu_counter="12" style="font-size: 113.1%; position: relative;"><mjx-math display="true" class="MJX-TEX" aria-hidden="true" style="margin-left: 0px; margin-right: 0px;"><mjx-mtext class="mjx-n"><mjx-c class="mjx-c50"></mjx-c><mjx-c class="mjx-c53"></mjx-c><mjx-c class="mjx-c4E"></mjx-c><mjx-c class="mjx-c52"></mjx-c></mjx-mtext><mjx-mo class="mjx-n" space="4"><mjx-c class="mjx-c3D"></mjx-c></mjx-mo><mjx-mo class="mjx-n" space="4"><mjx-c class="mjx-c2212"></mjx-c></mjx-mo><mjx-mn class="mjx-n"><mjx-c class="mjx-c31"></mjx-c><mjx-c class="mjx-c30"></mjx-c></mjx-mn><mjx-msub space="2"><mjx-mi class="mjx-n"><mjx-c class="mjx-c6C"></mjx-c><mjx-c class="mjx-c6F"></mjx-c><mjx-c class="mjx-c67"></mjx-c></mjx-mi><mjx-script style="vertical-align: -0.241em;"><mjx-texatom size="s" texclass="ORD"><mjx-mn class="mjx-n"><mjx-c class="mjx-c31"></mjx-c><mjx-c class="mjx-c30"></mjx-c></mjx-mn></mjx-texatom></mjx-script></mjx-msub><mjx-mo class="mjx-n"><mjx-c class="mjx-c2061"></mjx-c></mjx-mo><mjx-mo class="mjx-n"><mjx-c class="mjx-c28"></mjx-c></mjx-mo><mjx-mtext class="mjx-n"><mjx-c class="mjx-c4D"></mjx-c><mjx-c class="mjx-c53"></mjx-c><mjx-c class="mjx-c45"></mjx-c></mjx-mtext><mjx-mo class="mjx-n"><mjx-c class="mjx-c29"></mjx-c></mjx-mo></mjx-math><mjx-assistive-mml unselectable="on" display="block"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><mtext>PSNR</mtext><mo>=</mo><mo>−</mo><mn>10</mn><msub><mi>log</mi><mrow data-mjx-texclass="ORD"><mn>10</mn></mrow></msub><mo data-mjx-texclass="NONE">⁡</mo><mo stretchy="false">(</mo><mtext>MSE</mtext><mo stretchy="false">)</mo></math></mjx-assistive-mml></mjx-container>
+            </p>
+
+            <div class="image-container span-all">
+                <img src="results/test1.jpg_10_256/training_curves.png" alt="PSNR Curve" class="large-image">
+                <div class="image-caption">PSNR Training Curve for Fox Image
+                    (L=10, Width=256)
+                </div>
+            </div>
+            <div class="image-container span-all">
+                <img src="results/test2.jpg_10_256/training_curves.png" alt="PSNR Curve" class="large-image">
+                <div class="image-caption">PSNR Training Curve for Sunset Image
+                    (L=10, Width=256)
+                </div>
+            </div>
+
+            <p>
+                The PSNR curves show rapid improvement in early iterations, then
+                gradual refinement. The network
+                converges to high PSNR values (typically 25-30 dB for good
+                reconstructions), indicating successful
+                learning of the image representation.
+            </p>
+        </div>
+
+        <!-- Part 2: Fit a Neural Radiance Field from Multi-view Images -->
+        <div class="section">
+            <h2>Part 2: Fit a Neural Radiance Field from Multi-view Images</h2>
+
+            <p>
+                Now we extend the neural field to 3D, creating a Neural Radiance
+                Field. NERFs can represent a 3D scene
+                from multi-view images. 
+            </p>
+
+            <h3>Part 2.1: Creating Rays from Cameras</h3>
+
+            <h4>Camera to World Coordinate Conversion</h4>
+            <p>
+                The camera-to-world (c2w) transformation matrix converts points
+                from camera space to world space:
+                <mjx-container class="MathJax CtxtMenu_Attached_0" jax="CHTML" display="true" tabindex="0" ctxtmenu_counter="13" style="font-size: 113.1%; position: relative;"><mjx-math display="true" class="MJX-TEX" aria-hidden="true" style="margin-left: 0px; margin-right: 0px;"><mjx-msub><mjx-texatom texclass="ORD"><mjx-mi class="mjx-b"><mjx-c class="mjx-c1D431 TEX-B"></mjx-c></mjx-mi></mjx-texatom><mjx-script style="vertical-align: -0.15em;"><mjx-mi class="mjx-i" size="s"><mjx-c class="mjx-c1D464 TEX-I"></mjx-c></mjx-mi></mjx-script></mjx-msub><mjx-mo class="mjx-n" space="4"><mjx-c class="mjx-c3D"></mjx-c></mjx-mo><mjx-msub space="4"><mjx-texatom texclass="ORD"><mjx-mi class="mjx-b"><mjx-c class="mjx-c1D411 TEX-B"></mjx-c></mjx-mi></mjx-texatom><mjx-script style="vertical-align: -0.15em;"><mjx-texatom size="s" texclass="ORD"><mjx-mi class="mjx-i"><mjx-c class="mjx-c1D450 TEX-I"></mjx-c></mjx-mi><mjx-mn class="mjx-n"><mjx-c class="mjx-c32"></mjx-c></mjx-mn><mjx-mi class="mjx-i"><mjx-c class="mjx-c1D464 TEX-I"></mjx-c></mjx-mi></mjx-texatom></mjx-script></mjx-msub><mjx-msub><mjx-texatom texclass="ORD"><mjx-mi class="mjx-b"><mjx-c class="mjx-c1D431 TEX-B"></mjx-c></mjx-mi></mjx-texatom><mjx-script style="vertical-align: -0.15em;"><mjx-mi class="mjx-i" size="s"><mjx-c class="mjx-c1D450 TEX-I"></mjx-c></mjx-mi></mjx-script></mjx-msub><mjx-mo class="mjx-n" space="3"><mjx-c class="mjx-c2B"></mjx-c></mjx-mo><mjx-msub space="3"><mjx-texatom texclass="ORD"><mjx-mi class="mjx-b"><mjx-c class="mjx-c1D42D TEX-B"></mjx-c></mjx-mi></mjx-texatom><mjx-script style="vertical-align: -0.15em;"><mjx-texatom size="s" texclass="ORD"><mjx-mi class="mjx-i"><mjx-c class="mjx-c1D450 TEX-I"></mjx-c></mjx-mi><mjx-mn class="mjx-n"><mjx-c class="mjx-c32"></mjx-c></mjx-mn><mjx-mi class="mjx-i"><mjx-c class="mjx-c1D464 TEX-I"></mjx-c></mjx-mi></mjx-texatom></mjx-script></mjx-msub></mjx-math><mjx-assistive-mml unselectable="on" display="block"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><msub><mrow data-mjx-texclass="ORD"><mi mathvariant="bold">x</mi></mrow><mi>w</mi></msub><mo>=</mo><msub><mrow data-mjx-texclass="ORD"><mi mathvariant="bold">R</mi></mrow><mrow data-mjx-texclass="ORD"><mi>c</mi><mn>2</mn><mi>w</mi></mrow></msub><msub><mrow data-mjx-texclass="ORD"><mi mathvariant="bold">x</mi></mrow><mi>c</mi></msub><mo>+</mo><msub><mrow data-mjx-texclass="ORD"><mi mathvariant="bold">t</mi></mrow><mrow data-mjx-texclass="ORD"><mi>c</mi><mn>2</mn><mi>w</mi></mrow></msub></math></mjx-assistive-mml></mjx-container>
+                where <mjx-container class="MathJax CtxtMenu_Attached_0" jax="CHTML" tabindex="0" ctxtmenu_counter="14" style="font-size: 113.1%; position: relative;"><mjx-math class="MJX-TEX" aria-hidden="true"><mjx-msub><mjx-texatom texclass="ORD"><mjx-mi class="mjx-b"><mjx-c class="mjx-c1D411 TEX-B"></mjx-c></mjx-mi></mjx-texatom><mjx-script style="vertical-align: -0.15em;"><mjx-texatom size="s" texclass="ORD"><mjx-mi class="mjx-i"><mjx-c class="mjx-c1D450 TEX-I"></mjx-c></mjx-mi><mjx-mn class="mjx-n"><mjx-c class="mjx-c32"></mjx-c></mjx-mn><mjx-mi class="mjx-i"><mjx-c class="mjx-c1D464 TEX-I"></mjx-c></mjx-mi></mjx-texatom></mjx-script></mjx-msub></mjx-math><mjx-assistive-mml unselectable="on" display="inline"><math xmlns="http://www.w3.org/1998/Math/MathML"><msub><mrow data-mjx-texclass="ORD"><mi mathvariant="bold">R</mi></mrow><mrow data-mjx-texclass="ORD"><mi>c</mi><mn>2</mn><mi>w</mi></mrow></msub></math></mjx-assistive-mml></mjx-container> is the rotation matrix and
+                <mjx-container class="MathJax CtxtMenu_Attached_0" jax="CHTML" tabindex="0" ctxtmenu_counter="15" style="font-size: 113.1%; position: relative;"><mjx-math class="MJX-TEX" aria-hidden="true"><mjx-msub><mjx-texatom texclass="ORD"><mjx-mi class="mjx-b"><mjx-c class="mjx-c1D42D TEX-B"></mjx-c></mjx-mi></mjx-texatom><mjx-script style="vertical-align: -0.15em;"><mjx-texatom size="s" texclass="ORD"><mjx-mi class="mjx-i"><mjx-c class="mjx-c1D450 TEX-I"></mjx-c></mjx-mi><mjx-mn class="mjx-n"><mjx-c class="mjx-c32"></mjx-c></mjx-mn><mjx-mi class="mjx-i"><mjx-c class="mjx-c1D464 TEX-I"></mjx-c></mjx-mi></mjx-texatom></mjx-script></mjx-msub></mjx-math><mjx-assistive-mml unselectable="on" display="inline"><math xmlns="http://www.w3.org/1998/Math/MathML"><msub><mrow data-mjx-texclass="ORD"><mi mathvariant="bold">t</mi></mrow><mrow data-mjx-texclass="ORD"><mi>c</mi><mn>2</mn><mi>w</mi></mrow></msub></math></mjx-assistive-mml></mjx-container> is the translation vector. I
+                implemented a batched transformation function that supports
+                efficient processing of multiple points.
+            </p>
+
+            <h4>Pixel to Camera Coordinate Conversion</h4>
+            <p>
+                For a pinhole camera with intrinsic matrix <mjx-container class="MathJax CtxtMenu_Attached_0" jax="CHTML" tabindex="0" ctxtmenu_counter="16" style="font-size: 113.1%; position: relative;"><mjx-math class="MJX-TEX" aria-hidden="true"><mjx-mi class="mjx-i"><mjx-c class="mjx-c1D43E TEX-I"></mjx-c></mjx-mi></mjx-math><mjx-assistive-mml unselectable="on" display="inline"><math xmlns="http://www.w3.org/1998/Math/MathML"><mi>K</mi></math></mjx-assistive-mml></mjx-container>, we invert the
+                projection to convert pixel coordinates
+                back to camera space:
+                <mjx-container class="MathJax CtxtMenu_Attached_0" jax="CHTML" display="true" tabindex="0" ctxtmenu_counter="17" style="font-size: 113.1%; position: relative;"><mjx-math display="true" class="MJX-TEX" aria-hidden="true" style="margin-left: 0px; margin-right: 0px;"><mjx-mrow><mjx-mo class="mjx-n"><mjx-stretchy-v class="mjx-c5B" style="height: 3.8em; vertical-align: -1.65em;"><mjx-beg><mjx-c></mjx-c></mjx-beg><mjx-ext><mjx-c></mjx-c></mjx-ext><mjx-end><mjx-c></mjx-c></mjx-end><mjx-mark></mjx-mark></mjx-stretchy-v></mjx-mo><mjx-mtable style="min-width: 0.961em;"><mjx-table><mjx-itable><mjx-mtr><mjx-mtd style="padding-bottom: 0.2em;"><mjx-msub><mjx-mi class="mjx-i"><mjx-c class="mjx-c1D465 TEX-I"></mjx-c></mjx-mi><mjx-script style="vertical-align: -0.15em;"><mjx-mi class="mjx-i" size="s"><mjx-c class="mjx-c1D450 TEX-I"></mjx-c></mjx-mi></mjx-script></mjx-msub><mjx-tstrut></mjx-tstrut></mjx-mtd></mjx-mtr><mjx-mtr><mjx-mtd style="padding-top: 0.2em; padding-bottom: 0.2em;"><mjx-msub><mjx-mi class="mjx-i"><mjx-c class="mjx-c1D466 TEX-I"></mjx-c></mjx-mi><mjx-script style="vertical-align: -0.15em;"><mjx-mi class="mjx-i" size="s"><mjx-c class="mjx-c1D450 TEX-I"></mjx-c></mjx-mi></mjx-script></mjx-msub><mjx-tstrut></mjx-tstrut></mjx-mtd></mjx-mtr><mjx-mtr><mjx-mtd style="padding-top: 0.2em;"><mjx-msub><mjx-mi class="mjx-i"><mjx-c class="mjx-c1D467 TEX-I"></mjx-c></mjx-mi><mjx-script style="vertical-align: -0.15em;"><mjx-mi class="mjx-i" size="s"><mjx-c class="mjx-c1D450 TEX-I"></mjx-c></mjx-mi></mjx-script></mjx-msub><mjx-tstrut></mjx-tstrut></mjx-mtd></mjx-mtr></mjx-itable></mjx-table></mjx-mtable><mjx-mo class="mjx-n"><mjx-stretchy-v class="mjx-c5D" style="height: 3.8em; vertical-align: -1.65em;"><mjx-beg><mjx-c></mjx-c></mjx-beg><mjx-ext><mjx-c></mjx-c></mjx-ext><mjx-end><mjx-c></mjx-c></mjx-end><mjx-mark></mjx-mark></mjx-stretchy-v></mjx-mo></mjx-mrow><mjx-mo class="mjx-n" space="4"><mjx-c class="mjx-c3D"></mjx-c></mjx-mo><mjx-msup space="4"><mjx-mi class="mjx-i"><mjx-c class="mjx-c1D43E TEX-I"></mjx-c></mjx-mi><mjx-script style="vertical-align: 0.413em; margin-left: 0.052em;"><mjx-texatom size="s" texclass="ORD"><mjx-mo class="mjx-n"><mjx-c class="mjx-c2212"></mjx-c></mjx-mo><mjx-mn class="mjx-n"><mjx-c class="mjx-c31"></mjx-c></mjx-mn></mjx-texatom></mjx-script></mjx-msup><mjx-mrow space="2"><mjx-mo class="mjx-n"><mjx-stretchy-v class="mjx-c5B" style="height: 3.8em; vertical-align: -1.65em;"><mjx-beg><mjx-c></mjx-c></mjx-beg><mjx-ext><mjx-c></mjx-c></mjx-ext><mjx-end><mjx-c></mjx-c></mjx-end><mjx-mark></mjx-mark></mjx-stretchy-v></mjx-mo><mjx-mtable style="min-width: 0.572em;"><mjx-table><mjx-itable><mjx-mtr><mjx-mtd style="padding-bottom: 0.2em;"><mjx-mi class="mjx-i"><mjx-c class="mjx-c1D462 TEX-I"></mjx-c></mjx-mi><mjx-tstrut></mjx-tstrut></mjx-mtd></mjx-mtr><mjx-mtr><mjx-mtd style="padding-top: 0.2em; padding-bottom: 0.2em;"><mjx-mi class="mjx-i"><mjx-c class="mjx-c1D463 TEX-I"></mjx-c></mjx-mi><mjx-tstrut></mjx-tstrut></mjx-mtd></mjx-mtr><mjx-mtr><mjx-mtd style="padding-top: 0.2em;"><mjx-mn class="mjx-n"><mjx-c class="mjx-c31"></mjx-c></mjx-mn><mjx-tstrut></mjx-tstrut></mjx-mtd></mjx-mtr></mjx-itable></mjx-table></mjx-mtable><mjx-mo class="mjx-n"><mjx-stretchy-v class="mjx-c5D" style="height: 3.8em; vertical-align: -1.65em;"><mjx-beg><mjx-c></mjx-c></mjx-beg><mjx-ext><mjx-c></mjx-c></mjx-ext><mjx-end><mjx-c></mjx-c></mjx-end><mjx-mark></mjx-mark></mjx-stretchy-v></mjx-mo></mjx-mrow><mjx-mo class="mjx-n" space="3"><mjx-c class="mjx-c22C5"></mjx-c></mjx-mo><mjx-mi class="mjx-i" space="3"><mjx-c class="mjx-c1D460 TEX-I"></mjx-c></mjx-mi></mjx-math><mjx-assistive-mml unselectable="on" display="block"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><mrow data-mjx-texclass="INNER"><mo data-mjx-texclass="OPEN">[</mo><mtable columnspacing="1em" rowspacing="4pt"><mtr><mtd><msub><mi>x</mi><mi>c</mi></msub></mtd></mtr><mtr><mtd><msub><mi>y</mi><mi>c</mi></msub></mtd></mtr><mtr><mtd><msub><mi>z</mi><mi>c</mi></msub></mtd></mtr></mtable><mo data-mjx-texclass="CLOSE">]</mo></mrow><mo>=</mo><msup><mi>K</mi><mrow data-mjx-texclass="ORD"><mo>−</mo><mn>1</mn></mrow></msup><mrow data-mjx-texclass="INNER"><mo data-mjx-texclass="OPEN">[</mo><mtable columnspacing="1em" rowspacing="4pt"><mtr><mtd><mi>u</mi></mtd></mtr><mtr><mtd><mi>v</mi></mtd></mtr><mtr><mtd><mn>1</mn></mtd></mtr></mtable><mo data-mjx-texclass="CLOSE">]</mo></mrow><mo>⋅</mo><mi>s</mi></math></mjx-assistive-mml></mjx-container>
+                where <mjx-container class="MathJax CtxtMenu_Attached_0" jax="CHTML" tabindex="0" ctxtmenu_counter="18" style="font-size: 113.1%; position: relative;"><mjx-math class="MJX-TEX" aria-hidden="true"><mjx-mi class="mjx-i"><mjx-c class="mjx-c1D460 TEX-I"></mjx-c></mjx-mi></mjx-math><mjx-assistive-mml unselectable="on" display="inline"><math xmlns="http://www.w3.org/1998/Math/MathML"><mi>s</mi></math></mjx-assistive-mml></mjx-container> is the depth. For ray generation, we typically set
+                <mjx-container class="MathJax CtxtMenu_Attached_0" jax="CHTML" tabindex="0" ctxtmenu_counter="19" style="font-size: 113.1%; position: relative;"><mjx-math class="MJX-TEX" aria-hidden="true"><mjx-mi class="mjx-i"><mjx-c class="mjx-c1D460 TEX-I"></mjx-c></mjx-mi><mjx-mo class="mjx-n" space="4"><mjx-c class="mjx-c3D"></mjx-c></mjx-mo><mjx-mn class="mjx-n" space="4"><mjx-c class="mjx-c31"></mjx-c></mjx-mn></mjx-math><mjx-assistive-mml unselectable="on" display="inline"><math xmlns="http://www.w3.org/1998/Math/MathML"><mi>s</mi><mo>=</mo><mn>1</mn></math></mjx-assistive-mml></mjx-container> to get points at unit depth.
+            </p>
+
+            <h4>Pixel to Ray</h4>
+            <p>
+                A ray is defined by an origin <mjx-container class="MathJax CtxtMenu_Attached_0" jax="CHTML" tabindex="0" ctxtmenu_counter="20" style="font-size: 113.1%; position: relative;"><mjx-math class="MJX-TEX" aria-hidden="true"><mjx-texatom texclass="ORD"><mjx-mi class="mjx-b"><mjx-c class="mjx-c1D428 TEX-B"></mjx-c></mjx-mi></mjx-texatom></mjx-math><mjx-assistive-mml unselectable="on" display="inline"><math xmlns="http://www.w3.org/1998/Math/MathML"><mrow data-mjx-texclass="ORD"><mi mathvariant="bold">o</mi></mrow></math></mjx-assistive-mml></mjx-container> and direction
+                <mjx-container class="MathJax CtxtMenu_Attached_0" jax="CHTML" tabindex="0" ctxtmenu_counter="21" style="font-size: 113.1%; position: relative;"><mjx-math class="MJX-TEX" aria-hidden="true"><mjx-texatom texclass="ORD"><mjx-mi class="mjx-b"><mjx-c class="mjx-c1D41D TEX-B"></mjx-c></mjx-mi></mjx-texatom></mjx-math><mjx-assistive-mml unselectable="on" display="inline"><math xmlns="http://www.w3.org/1998/Math/MathML"><mrow data-mjx-texclass="ORD"><mi mathvariant="bold">d</mi></mrow></math></mjx-assistive-mml></mjx-container>. For a pixel at <mjx-container class="MathJax CtxtMenu_Attached_0" jax="CHTML" tabindex="0" ctxtmenu_counter="22" style="font-size: 113.1%; position: relative;"><mjx-math class="MJX-TEX" aria-hidden="true"><mjx-mo class="mjx-n"><mjx-c class="mjx-c28"></mjx-c></mjx-mo><mjx-mi class="mjx-i"><mjx-c class="mjx-c1D462 TEX-I"></mjx-c></mjx-mi><mjx-mo class="mjx-n"><mjx-c class="mjx-c2C"></mjx-c></mjx-mo><mjx-mi class="mjx-i" space="2"><mjx-c class="mjx-c1D463 TEX-I"></mjx-c></mjx-mi><mjx-mo class="mjx-n"><mjx-c class="mjx-c29"></mjx-c></mjx-mo></mjx-math><mjx-assistive-mml unselectable="on" display="inline"><math xmlns="http://www.w3.org/1998/Math/MathML"><mo stretchy="false">(</mo><mi>u</mi><mo>,</mo><mi>v</mi><mo stretchy="false">)</mo></math></mjx-assistive-mml></mjx-container>:
+            </p>
+            <ul>
+                <li><strong>Ray origin:</strong> The camera position in world
+                    coordinates, which is the translation
+                    component of the c2w matrix: <mjx-container class="MathJax CtxtMenu_Attached_0" jax="CHTML" tabindex="0" ctxtmenu_counter="23" style="font-size: 113.1%; position: relative;"><mjx-math class="MJX-TEX" aria-hidden="true"><mjx-texatom texclass="ORD"><mjx-mi class="mjx-b"><mjx-c class="mjx-c1D428 TEX-B"></mjx-c></mjx-mi></mjx-texatom><mjx-mo class="mjx-n" space="4"><mjx-c class="mjx-c3D"></mjx-c></mjx-mo><mjx-msub space="4"><mjx-texatom texclass="ORD"><mjx-mi class="mjx-b"><mjx-c class="mjx-c1D42D TEX-B"></mjx-c></mjx-mi></mjx-texatom><mjx-script style="vertical-align: -0.15em;"><mjx-texatom size="s" texclass="ORD"><mjx-mi class="mjx-i"><mjx-c class="mjx-c1D450 TEX-I"></mjx-c></mjx-mi><mjx-mn class="mjx-n"><mjx-c class="mjx-c32"></mjx-c></mjx-mn><mjx-mi class="mjx-i"><mjx-c class="mjx-c1D464 TEX-I"></mjx-c></mjx-mi></mjx-texatom></mjx-script></mjx-msub></mjx-math><mjx-assistive-mml unselectable="on" display="inline"><math xmlns="http://www.w3.org/1998/Math/MathML"><mrow data-mjx-texclass="ORD"><mi mathvariant="bold">o</mi></mrow><mo>=</mo><msub><mrow data-mjx-texclass="ORD"><mi mathvariant="bold">t</mi></mrow><mrow data-mjx-texclass="ORD"><mi>c</mi><mn>2</mn><mi>w</mi></mrow></msub></math></mjx-assistive-mml></mjx-container>
+                </li>
+                <li><strong>Ray direction:</strong> Convert the pixel to a 3D
+                    point in camera space, transform to world
+                    space, then normalize:
+                    <mjx-container class="MathJax CtxtMenu_Attached_0" jax="CHTML" display="true" tabindex="0" ctxtmenu_counter="24" style="font-size: 113.1%; position: relative;"><mjx-math display="true" class="MJX-TEX" aria-hidden="true" style="margin-left: 0px; margin-right: 0px;"><mjx-texatom texclass="ORD"><mjx-mi class="mjx-b"><mjx-c class="mjx-c1D41D TEX-B"></mjx-c></mjx-mi></mjx-texatom><mjx-mo class="mjx-n" space="4"><mjx-c class="mjx-c3D"></mjx-c></mjx-mo><mjx-mfrac space="4"><mjx-frac type="d"><mjx-num><mjx-nstrut type="d"></mjx-nstrut><mjx-mrow><mjx-mtext class="mjx-n"><mjx-c class="mjx-c74"></mjx-c><mjx-c class="mjx-c72"></mjx-c><mjx-c class="mjx-c61"></mjx-c><mjx-c class="mjx-c6E"></mjx-c><mjx-c class="mjx-c73"></mjx-c><mjx-c class="mjx-c66"></mjx-c><mjx-c class="mjx-c6F"></mjx-c><mjx-c class="mjx-c72"></mjx-c><mjx-c class="mjx-c6D"></mjx-c></mjx-mtext><mjx-mo class="mjx-n"><mjx-c class="mjx-c28"></mjx-c></mjx-mo><mjx-mtext class="mjx-n"><mjx-c class="mjx-c63"></mjx-c><mjx-c class="mjx-c32"></mjx-c><mjx-c class="mjx-c77"></mjx-c></mjx-mtext><mjx-mo class="mjx-n"><mjx-c class="mjx-c2C"></mjx-c></mjx-mo><mjx-msup space="2"><mjx-mi class="mjx-i"><mjx-c class="mjx-c1D43E TEX-I"></mjx-c></mjx-mi><mjx-script style="vertical-align: 0.363em; margin-left: 0.052em;"><mjx-texatom size="s" texclass="ORD"><mjx-mo class="mjx-n"><mjx-c class="mjx-c2212"></mjx-c></mjx-mo><mjx-mn class="mjx-n"><mjx-c class="mjx-c31"></mjx-c></mjx-mn></mjx-texatom></mjx-script></mjx-msup><mjx-mo class="mjx-n"><mjx-c class="mjx-c5B"></mjx-c></mjx-mo><mjx-mi class="mjx-i"><mjx-c class="mjx-c1D462 TEX-I"></mjx-c></mjx-mi><mjx-mo class="mjx-n"><mjx-c class="mjx-c2C"></mjx-c></mjx-mo><mjx-mi class="mjx-i" space="2"><mjx-c class="mjx-c1D463 TEX-I"></mjx-c></mjx-mi><mjx-mo class="mjx-n"><mjx-c class="mjx-c2C"></mjx-c></mjx-mo><mjx-mn class="mjx-n" space="2"><mjx-c class="mjx-c31"></mjx-c></mjx-mn><mjx-msup><mjx-mo class="mjx-n"><mjx-c class="mjx-c5D"></mjx-c></mjx-mo><mjx-script style="vertical-align: 0.363em;"><mjx-mi class="mjx-i" size="s"><mjx-c class="mjx-c1D447 TEX-I"></mjx-c></mjx-mi></mjx-script></mjx-msup><mjx-mo class="mjx-n"><mjx-c class="mjx-c29"></mjx-c></mjx-mo><mjx-mo class="mjx-n" space="3"><mjx-c class="mjx-c2212"></mjx-c></mjx-mo><mjx-texatom space="3" texclass="ORD"><mjx-mi class="mjx-b"><mjx-c class="mjx-c1D428 TEX-B"></mjx-c></mjx-mi></mjx-texatom></mjx-mrow></mjx-num><mjx-dbox><mjx-dtable><mjx-line type="d"></mjx-line><mjx-row><mjx-den><mjx-dstrut type="d"></mjx-dstrut><mjx-mrow><mjx-mo class="mjx-n"><mjx-c class="mjx-c7C"></mjx-c></mjx-mo><mjx-texatom texclass="ORD"><mjx-mo class="mjx-n"><mjx-c class="mjx-c7C"></mjx-c></mjx-mo></mjx-texatom><mjx-mtext class="mjx-n"><mjx-c class="mjx-c74"></mjx-c><mjx-c class="mjx-c72"></mjx-c><mjx-c class="mjx-c61"></mjx-c><mjx-c class="mjx-c6E"></mjx-c><mjx-c class="mjx-c73"></mjx-c><mjx-c class="mjx-c66"></mjx-c><mjx-c class="mjx-c6F"></mjx-c><mjx-c class="mjx-c72"></mjx-c><mjx-c class="mjx-c6D"></mjx-c></mjx-mtext><mjx-mo class="mjx-n"><mjx-c class="mjx-c28"></mjx-c></mjx-mo><mjx-mtext class="mjx-n"><mjx-c class="mjx-c63"></mjx-c><mjx-c class="mjx-c32"></mjx-c><mjx-c class="mjx-c77"></mjx-c></mjx-mtext><mjx-mo class="mjx-n"><mjx-c class="mjx-c2C"></mjx-c></mjx-mo><mjx-msup space="2"><mjx-mi class="mjx-i"><mjx-c class="mjx-c1D43E TEX-I"></mjx-c></mjx-mi><mjx-script style="vertical-align: 0.289em; margin-left: 0.052em;"><mjx-texatom size="s" texclass="ORD"><mjx-mo class="mjx-n"><mjx-c class="mjx-c2212"></mjx-c></mjx-mo><mjx-mn class="mjx-n"><mjx-c class="mjx-c31"></mjx-c></mjx-mn></mjx-texatom></mjx-script></mjx-msup><mjx-mo class="mjx-n"><mjx-c class="mjx-c5B"></mjx-c></mjx-mo><mjx-mi class="mjx-i"><mjx-c class="mjx-c1D462 TEX-I"></mjx-c></mjx-mi><mjx-mo class="mjx-n"><mjx-c class="mjx-c2C"></mjx-c></mjx-mo><mjx-mi class="mjx-i" space="2"><mjx-c class="mjx-c1D463 TEX-I"></mjx-c></mjx-mi><mjx-mo class="mjx-n"><mjx-c class="mjx-c2C"></mjx-c></mjx-mo><mjx-mn class="mjx-n" space="2"><mjx-c class="mjx-c31"></mjx-c></mjx-mn><mjx-msup><mjx-mo class="mjx-n"><mjx-c class="mjx-c5D"></mjx-c></mjx-mo><mjx-script style="vertical-align: 0.289em;"><mjx-mi class="mjx-i" size="s"><mjx-c class="mjx-c1D447 TEX-I"></mjx-c></mjx-mi></mjx-script></mjx-msup><mjx-mo class="mjx-n"><mjx-c class="mjx-c29"></mjx-c></mjx-mo><mjx-mo class="mjx-n" space="3"><mjx-c class="mjx-c2212"></mjx-c></mjx-mo><mjx-texatom space="3" texclass="ORD"><mjx-mi class="mjx-b"><mjx-c class="mjx-c1D428 TEX-B"></mjx-c></mjx-mi></mjx-texatom><mjx-texatom texclass="ORD"><mjx-mo class="mjx-n"><mjx-c class="mjx-c7C"></mjx-c></mjx-mo></mjx-texatom><mjx-mo class="mjx-n"><mjx-c class="mjx-c7C"></mjx-c></mjx-mo></mjx-mrow></mjx-den></mjx-row></mjx-dtable></mjx-dbox></mjx-frac></mjx-mfrac></mjx-math><mjx-assistive-mml unselectable="on" display="block"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><mrow data-mjx-texclass="ORD"><mi mathvariant="bold">d</mi></mrow><mo>=</mo><mfrac><mrow><mtext>transform</mtext><mo stretchy="false">(</mo><mtext>c2w</mtext><mo>,</mo><msup><mi>K</mi><mrow data-mjx-texclass="ORD"><mo>−</mo><mn>1</mn></mrow></msup><mo stretchy="false">[</mo><mi>u</mi><mo>,</mo><mi>v</mi><mo>,</mo><mn>1</mn><msup><mo stretchy="false">]</mo><mi>T</mi></msup><mo stretchy="false">)</mo><mo>−</mo><mrow data-mjx-texclass="ORD"><mi mathvariant="bold">o</mi></mrow></mrow><mrow><mo stretchy="false">|</mo><mrow data-mjx-texclass="ORD"><mo stretchy="false">|</mo></mrow><mtext>transform</mtext><mo stretchy="false">(</mo><mtext>c2w</mtext><mo>,</mo><msup><mi>K</mi><mrow data-mjx-texclass="ORD"><mo>−</mo><mn>1</mn></mrow></msup><mo stretchy="false">[</mo><mi>u</mi><mo>,</mo><mi>v</mi><mo>,</mo><mn>1</mn><msup><mo stretchy="false">]</mo><mi>T</mi></msup><mo stretchy="false">)</mo><mo>−</mo><mrow data-mjx-texclass="ORD"><mi mathvariant="bold">o</mi></mrow><mrow data-mjx-texclass="ORD"><mo stretchy="false">|</mo></mrow><mo stretchy="false">|</mo></mrow></mfrac></math></mjx-assistive-mml></mjx-container>
+                </li>
+            </ul>
+
+            <h3>Part 2.2: Sampling</h3>
+
+            <h4>Sampling Rays from Images</h4>
+            <p>
+                Similar to Part 1, we randomly sample pixels (and thus rays)
+                from the training images. At each
+                iteration, I sample <mjx-container class="MathJax CtxtMenu_Attached_0" jax="CHTML" tabindex="0" ctxtmenu_counter="25" style="font-size: 113.1%; position: relative;"><mjx-math class="MJX-TEX" aria-hidden="true"><mjx-mi class="mjx-i"><mjx-c class="mjx-c1D441 TEX-I"></mjx-c></mjx-mi></mjx-math><mjx-assistive-mml unselectable="on" display="inline"><math xmlns="http://www.w3.org/1998/Math/MathML"><mi>N</mi></math></mjx-assistive-mml></mjx-container> rays from all training images. The
+                implementation accounts for the offset from
+                image coordinates to pixel centers by adding 0.5 to the UV
+                coordinates.
+            </p>
+
+            <h4>Sampling Points along Rays</h4>
+            <p>
+                Each ray is discretized into samples along its length. I use
+                uniform sampling between near and far
+                planes:
+                <mjx-container class="MathJax CtxtMenu_Attached_0" jax="CHTML" display="true" tabindex="0" ctxtmenu_counter="26" style="font-size: 113.1%; position: relative;"><mjx-math display="true" class="MJX-TEX" aria-hidden="true" style="margin-left: 0px; margin-right: 0px;"><mjx-msub><mjx-mi class="mjx-i"><mjx-c class="mjx-c1D461 TEX-I"></mjx-c></mjx-mi><mjx-script style="vertical-align: -0.15em;"><mjx-mi class="mjx-i" size="s"><mjx-c class="mjx-c1D456 TEX-I"></mjx-c></mjx-mi></mjx-script></mjx-msub><mjx-mo class="mjx-n" space="4"><mjx-c class="mjx-c3D"></mjx-c></mjx-mo><mjx-mtext class="mjx-n" space="4"><mjx-c class="mjx-c6E"></mjx-c><mjx-c class="mjx-c65"></mjx-c><mjx-c class="mjx-c61"></mjx-c><mjx-c class="mjx-c72"></mjx-c></mjx-mtext><mjx-mo class="mjx-n" space="3"><mjx-c class="mjx-c2B"></mjx-c></mjx-mo><mjx-mfrac space="3"><mjx-frac type="d"><mjx-num><mjx-nstrut type="d"></mjx-nstrut><mjx-mi class="mjx-i"><mjx-c class="mjx-c1D456 TEX-I"></mjx-c></mjx-mi></mjx-num><mjx-dbox><mjx-dtable><mjx-line type="d"></mjx-line><mjx-row><mjx-den><mjx-dstrut type="d"></mjx-dstrut><mjx-mrow><mjx-mi class="mjx-i"><mjx-c class="mjx-c1D441 TEX-I"></mjx-c></mjx-mi><mjx-mo class="mjx-n" space="3"><mjx-c class="mjx-c2212"></mjx-c></mjx-mo><mjx-mn class="mjx-n" space="3"><mjx-c class="mjx-c31"></mjx-c></mjx-mn></mjx-mrow></mjx-den></mjx-row></mjx-dtable></mjx-dbox></mjx-frac></mjx-mfrac><mjx-mo class="mjx-n"><mjx-c class="mjx-c28"></mjx-c></mjx-mo><mjx-mtext class="mjx-n"><mjx-c class="mjx-c66"></mjx-c><mjx-c class="mjx-c61"></mjx-c><mjx-c class="mjx-c72"></mjx-c></mjx-mtext><mjx-mo class="mjx-n" space="3"><mjx-c class="mjx-c2212"></mjx-c></mjx-mo><mjx-mtext class="mjx-n" space="3"><mjx-c class="mjx-c6E"></mjx-c><mjx-c class="mjx-c65"></mjx-c><mjx-c class="mjx-c61"></mjx-c><mjx-c class="mjx-c72"></mjx-c></mjx-mtext><mjx-mo class="mjx-n"><mjx-c class="mjx-c29"></mjx-c></mjx-mo></mjx-math><mjx-assistive-mml unselectable="on" display="block"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><msub><mi>t</mi><mi>i</mi></msub><mo>=</mo><mtext>near</mtext><mo>+</mo><mfrac><mi>i</mi><mrow><mi>N</mi><mo>−</mo><mn>1</mn></mrow></mfrac><mo stretchy="false">(</mo><mtext>far</mtext><mo>−</mo><mtext>near</mtext><mo stretchy="false">)</mo></math></mjx-assistive-mml></mjx-container>
+                The 3D coordinates are then: <mjx-container class="MathJax CtxtMenu_Attached_0" jax="CHTML" tabindex="0" ctxtmenu_counter="27" style="font-size: 113.1%; position: relative;"><mjx-math class="MJX-TEX" aria-hidden="true"><mjx-msub><mjx-texatom texclass="ORD"><mjx-mi class="mjx-b"><mjx-c class="mjx-c1D431 TEX-B"></mjx-c></mjx-mi></mjx-texatom><mjx-script style="vertical-align: -0.15em;"><mjx-mi class="mjx-i" size="s"><mjx-c class="mjx-c1D456 TEX-I"></mjx-c></mjx-mi></mjx-script></mjx-msub><mjx-mo class="mjx-n" space="4"><mjx-c class="mjx-c3D"></mjx-c></mjx-mo><mjx-texatom space="4" texclass="ORD"><mjx-mi class="mjx-b"><mjx-c class="mjx-c1D428 TEX-B"></mjx-c></mjx-mi></mjx-texatom><mjx-mo class="mjx-n" space="3"><mjx-c class="mjx-c2B"></mjx-c></mjx-mo><mjx-msub space="3"><mjx-mi class="mjx-i"><mjx-c class="mjx-c1D461 TEX-I"></mjx-c></mjx-mi><mjx-script style="vertical-align: -0.15em;"><mjx-mi class="mjx-i" size="s"><mjx-c class="mjx-c1D456 TEX-I"></mjx-c></mjx-mi></mjx-script></mjx-msub><mjx-texatom texclass="ORD"><mjx-mi class="mjx-b"><mjx-c class="mjx-c1D41D TEX-B"></mjx-c></mjx-mi></mjx-texatom></mjx-math><mjx-assistive-mml unselectable="on" display="inline"><math xmlns="http://www.w3.org/1998/Math/MathML"><msub><mrow data-mjx-texclass="ORD"><mi mathvariant="bold">x</mi></mrow><mi>i</mi></msub><mo>=</mo><mrow data-mjx-texclass="ORD"><mi mathvariant="bold">o</mi></mrow><mo>+</mo><msub><mi>t</mi><mi>i</mi></msub><mrow data-mjx-texclass="ORD"><mi mathvariant="bold">d</mi></mrow></math></mjx-assistive-mml></mjx-container>.
+            </p>
+
+            <p>
+                To prevent overfitting and ensure all locations along the ray
+                are explored during training, I add small
+                random perturbations to the sample positions:
+                <mjx-container class="MathJax CtxtMenu_Attached_0" jax="CHTML" display="true" tabindex="0" ctxtmenu_counter="28" style="font-size: 113.1%; position: relative;"><mjx-math display="true" class="MJX-TEX" aria-hidden="true" style="margin-left: 0px; margin-right: 0px;"><mjx-msubsup><mjx-mi class="mjx-i"><mjx-c class="mjx-c1D461 TEX-I"></mjx-c></mjx-mi><mjx-script style="vertical-align: -0.247em; margin-left: 0px;"><mjx-mo class="mjx-var" size="s"><mjx-c class="mjx-c2032"></mjx-c></mjx-mo><mjx-spacer style="margin-top: 0.223em;"></mjx-spacer><mjx-mi class="mjx-i" size="s"><mjx-c class="mjx-c1D456 TEX-I"></mjx-c></mjx-mi></mjx-script></mjx-msubsup><mjx-mo class="mjx-n" space="4"><mjx-c class="mjx-c3D"></mjx-c></mjx-mo><mjx-msub space="4"><mjx-mi class="mjx-i"><mjx-c class="mjx-c1D461 TEX-I"></mjx-c></mjx-mi><mjx-script style="vertical-align: -0.15em;"><mjx-mi class="mjx-i" size="s"><mjx-c class="mjx-c1D456 TEX-I"></mjx-c></mjx-mi></mjx-script></mjx-msub><mjx-mo class="mjx-n" space="3"><mjx-c class="mjx-c2B"></mjx-c></mjx-mo><mjx-texatom space="3" texclass="ORD"><mjx-mi class="mjx-cal mjx-i"><mjx-c class="mjx-c55 TEX-C"></mjx-c></mjx-mi></mjx-texatom><mjx-mo class="mjx-n"><mjx-c class="mjx-c28"></mjx-c></mjx-mo><mjx-mn class="mjx-n"><mjx-c class="mjx-c30"></mjx-c></mjx-mn><mjx-mo class="mjx-n"><mjx-c class="mjx-c2C"></mjx-c></mjx-mo><mjx-mi class="mjx-n" space="2"><mjx-c class="mjx-c394"></mjx-c></mjx-mi><mjx-mi class="mjx-i"><mjx-c class="mjx-c1D461 TEX-I"></mjx-c></mjx-mi><mjx-mo class="mjx-n"><mjx-c class="mjx-c29"></mjx-c></mjx-mo></mjx-math><mjx-assistive-mml unselectable="on" display="block"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><msubsup><mi>t</mi><mi>i</mi><mo data-mjx-alternate="1">′</mo></msubsup><mo>=</mo><msub><mi>t</mi><mi>i</mi></msub><mo>+</mo><mrow data-mjx-texclass="ORD"><mi data-mjx-variant="-tex-calligraphic" mathvariant="script">U</mi></mrow><mo stretchy="false">(</mo><mn>0</mn><mo>,</mo><mi mathvariant="normal">Δ</mi><mi>t</mi><mo stretchy="false">)</mo></math></mjx-assistive-mml></mjx-container>
+                where <mjx-container class="MathJax CtxtMenu_Attached_0" jax="CHTML" tabindex="0" ctxtmenu_counter="29" style="font-size: 113.1%; position: relative;"><mjx-math class="MJX-TEX" aria-hidden="true"><mjx-mi class="mjx-n"><mjx-c class="mjx-c394"></mjx-c></mjx-mi><mjx-mi class="mjx-i"><mjx-c class="mjx-c1D461 TEX-I"></mjx-c></mjx-mi></mjx-math><mjx-assistive-mml unselectable="on" display="inline"><math xmlns="http://www.w3.org/1998/Math/MathML"><mi mathvariant="normal">Δ</mi><mi>t</mi></math></mjx-assistive-mml></mjx-container> is the interval width. This perturbation is
+                only applied during training, not during
+                inference.
+            </p>
+
+            <div class="technical-details">
+                <h4>Sampling Parameters</h4>
+                <ul>
+                    <li><strong>Near plane:</strong> 2.0 (for Lego scene)</li>
+                    <li><strong>Far plane:</strong> 6.0 (for Lego scene)</li>
+                    <li><strong>Number of samples:</strong> 32-64 per ray</li>
+                    <li><strong>Perturbation:</strong> Random offset within each
+                        interval during training</li>
+                </ul>
+            </div>
+
+            <h3>Part 2.3: Ray and Sample Visualization</h3>
+            <p>
+                I visualized the rays and samples to verify the implementation.
+                The visualization shows cameras, sampled
+                rays, and 3D sample points:
+            </p>
+
+            <div class="image-grid" style="grid-template-columns: repeat(2, 1fr);">
+                <div class="image-container">
+                    <img src="results/results/lego_rays_one_cam.jpg" alt="Rays from One Camera">
+                    <div class="image-caption">Rays and Samples from a Single
+                        Camera</div>
+                </div>
+                <div class="image-container">
+                    <img src="results/results/lego_rays_many.jpg" alt="Rays from Many Cameras">
+                    <div class="image-caption">Rays and Samples from Multiple
+                        Cameras</div>
+                </div>
+            </div>
+
+            <h3>Part 2.4: Neural Radiance Field Network</h3>
+
+            <div class="architecture-box">
+                <h4>NeRF Network Architecture</h4>
+                <ul>
+                    <li><strong>Input:</strong>
+                        <ul>
+                            <li>3D coordinates <mjx-container class="MathJax CtxtMenu_Attached_0" jax="CHTML" tabindex="0" ctxtmenu_counter="30" style="font-size: 113.1%; position: relative;"><mjx-math class="MJX-TEX" aria-hidden="true"><mjx-texatom texclass="ORD"><mjx-mi class="mjx-b"><mjx-c class="mjx-c1D431 TEX-B"></mjx-c></mjx-mi></mjx-texatom><mjx-mo class="mjx-n" space="4"><mjx-c class="mjx-c2208"></mjx-c></mjx-mo><mjx-msup space="4"><mjx-texatom texclass="ORD"><mjx-mi class="mjx-ds mjx-b"><mjx-c class="mjx-c211D TEX-A"></mjx-c></mjx-mi></mjx-texatom><mjx-script style="vertical-align: 0.363em;"><mjx-mn class="mjx-n" size="s"><mjx-c class="mjx-c33"></mjx-c></mjx-mn></mjx-script></mjx-msup></mjx-math><mjx-assistive-mml unselectable="on" display="inline"><math xmlns="http://www.w3.org/1998/Math/MathML"><mrow data-mjx-texclass="ORD"><mi mathvariant="bold">x</mi></mrow><mo>∈</mo><msup><mrow data-mjx-texclass="ORD"><mi mathvariant="double-struck">R</mi></mrow><mn>3</mn></msup></math></mjx-assistive-mml></mjx-container>
+                                (positional encoding with <mjx-container class="MathJax CtxtMenu_Attached_0" jax="CHTML" tabindex="0" ctxtmenu_counter="31" style="font-size: 113.1%; position: relative;"><mjx-math class="MJX-TEX" aria-hidden="true"><mjx-mi class="mjx-i"><mjx-c class="mjx-c1D43F TEX-I"></mjx-c></mjx-mi><mjx-mo class="mjx-n" space="4"><mjx-c class="mjx-c3D"></mjx-c></mjx-mo><mjx-mn class="mjx-n" space="4"><mjx-c class="mjx-c31"></mjx-c><mjx-c class="mjx-c30"></mjx-c></mjx-mn></mjx-math><mjx-assistive-mml unselectable="on" display="inline"><math xmlns="http://www.w3.org/1998/Math/MathML"><mi>L</mi><mo>=</mo><mn>10</mn></math></mjx-assistive-mml></mjx-container>)</li>
+                            <li>View direction <mjx-container class="MathJax CtxtMenu_Attached_0" jax="CHTML" tabindex="0" ctxtmenu_counter="32" style="font-size: 113.1%; position: relative;"><mjx-math class="MJX-TEX" aria-hidden="true"><mjx-texatom texclass="ORD"><mjx-mi class="mjx-b"><mjx-c class="mjx-c1D41D TEX-B"></mjx-c></mjx-mi></mjx-texatom><mjx-mo class="mjx-n" space="4"><mjx-c class="mjx-c2208"></mjx-c></mjx-mo><mjx-msup space="4"><mjx-texatom texclass="ORD"><mjx-mi class="mjx-ds mjx-b"><mjx-c class="mjx-c211D TEX-A"></mjx-c></mjx-mi></mjx-texatom><mjx-script style="vertical-align: 0.363em;"><mjx-mn class="mjx-n" size="s"><mjx-c class="mjx-c33"></mjx-c></mjx-mn></mjx-script></mjx-msup></mjx-math><mjx-assistive-mml unselectable="on" display="inline"><math xmlns="http://www.w3.org/1998/Math/MathML"><mrow data-mjx-texclass="ORD"><mi mathvariant="bold">d</mi></mrow><mo>∈</mo><msup><mrow data-mjx-texclass="ORD"><mi mathvariant="double-struck">R</mi></mrow><mn>3</mn></msup></math></mjx-assistive-mml></mjx-container>
+                                (positional encoding with <mjx-container class="MathJax CtxtMenu_Attached_0" jax="CHTML" tabindex="0" ctxtmenu_counter="33" style="font-size: 113.1%; position: relative;"><mjx-math class="MJX-TEX" aria-hidden="true"><mjx-mi class="mjx-i"><mjx-c class="mjx-c1D43F TEX-I"></mjx-c></mjx-mi><mjx-mo class="mjx-n" space="4"><mjx-c class="mjx-c3D"></mjx-c></mjx-mo><mjx-mn class="mjx-n" space="4"><mjx-c class="mjx-c34"></mjx-c></mjx-mn></mjx-math><mjx-assistive-mml unselectable="on" display="inline"><math xmlns="http://www.w3.org/1998/Math/MathML"><mi>L</mi><mo>=</mo><mn>4</mn></math></mjx-assistive-mml></mjx-container>)</li>
+                        </ul>
+                    </li>
+                    <li><strong>MLP Structure:</strong>
+                        <ul>
+                            <li>Input layer: 60 → 256 (60 = 3 + 3×2×10 for
+                                position encoding)</li>
+                            <li>Hidden layers: 256 → 256 (8 layers)</li>
+                            <li>Density head: 256 → 1 (with ReLU to ensure
+                                non-negative density)</li>
+                            <li>Feature layer: 256 → 256</li>
+                            <li>View-dependent color head: 256 + 27 → 128 → 3
+                                (27 = 3 + 3×2×4 for view encoding, output
+                                with Sigmoid)</li>
+                        </ul>
+                    </li>
+                    <li><strong>Skip Connections:</strong> Input (after PE) is
+                        concatenated to the 4th hidden layer to
+                        help the network remember input features</li>
+                    <li><strong>Outputs:</strong>
+                        <ul>
+                            <li>Density <mjx-container class="MathJax CtxtMenu_Attached_0" jax="CHTML" tabindex="0" ctxtmenu_counter="34" style="font-size: 113.1%; position: relative;"><mjx-math class="MJX-TEX" aria-hidden="true"><mjx-mi class="mjx-i"><mjx-c class="mjx-c1D70E TEX-I"></mjx-c></mjx-mi></mjx-math><mjx-assistive-mml unselectable="on" display="inline"><math xmlns="http://www.w3.org/1998/Math/MathML"><mi>σ</mi></math></mjx-assistive-mml></mjx-container> (volume density, controls
+                                opacity)</li>
+                            <li>Color <mjx-container class="MathJax CtxtMenu_Attached_0" jax="CHTML" tabindex="0" ctxtmenu_counter="35" style="font-size: 113.1%; position: relative;"><mjx-math class="MJX-TEX" aria-hidden="true"><mjx-texatom texclass="ORD"><mjx-mi class="mjx-b"><mjx-c class="mjx-c1D41C TEX-B"></mjx-c></mjx-mi></mjx-texatom></mjx-math><mjx-assistive-mml unselectable="on" display="inline"><math xmlns="http://www.w3.org/1998/Math/MathML"><mrow data-mjx-texclass="ORD"><mi mathvariant="bold">c</mi></mrow></math></mjx-assistive-mml></mjx-container> (RGB, view-dependent)</li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+
+            <div class="technical-details">
+                <h4>Key Design Choices</h4>
+                <ul>
+                    <li><strong>View-dependent color:</strong> The color depends
+                        on both position and viewing direction,
+                        enabling realistic view-dependent effects like specular
+                        highlights.</li>
+                    <li><strong>Skip connections:</strong> Injecting the encoded
+                        input into the middle of the network
+                        helps prevent the network from "forgetting" the input
+                        coordinates, which is important for deep
+                        networks.</li>
+                    <li><strong>Separate encoding frequencies:</strong> Position
+                        uses higher frequency encoding (L=10)
+                        to capture fine geometric details, while view direction
+                        uses lower frequency (L=4) since view
+                        effects are typically smoother.</li>
+                </ul>
+            </div>
+
+            <h3>Part 2.5: Volume Rendering</h3>
+
+            <p>
+                Volume rendering composites the colors and densities along each
+                ray to produce the final pixel color.
+                The continuous volume rendering equation is:
+                <mjx-container class="MathJax CtxtMenu_Attached_0" jax="CHTML" display="true" tabindex="0" ctxtmenu_counter="36" style="font-size: 113.1%; position: relative;"><mjx-math display="true" class="MJX-TEX" aria-hidden="true" style="margin-left: 0px; margin-right: 0px;"><mjx-mi class="mjx-i"><mjx-c class="mjx-c1D436 TEX-I"></mjx-c></mjx-mi><mjx-mo class="mjx-n"><mjx-c class="mjx-c28"></mjx-c></mjx-mo><mjx-texatom texclass="ORD"><mjx-mi class="mjx-b"><mjx-c class="mjx-c1D42B TEX-B"></mjx-c></mjx-mi></mjx-texatom><mjx-mo class="mjx-n"><mjx-c class="mjx-c29"></mjx-c></mjx-mo><mjx-mo class="mjx-n" space="4"><mjx-c class="mjx-c3D"></mjx-c></mjx-mo><mjx-msubsup space="4"><mjx-mo class="mjx-lop"><mjx-c class="mjx-c222B TEX-S2"></mjx-c></mjx-mo><mjx-script style="vertical-align: -0.896em; margin-left: -0.388em;"><mjx-texatom size="s" texclass="ORD" style="margin-left: 0.647em;"><mjx-msub><mjx-mi class="mjx-i"><mjx-c class="mjx-c1D461 TEX-I"></mjx-c></mjx-mi><mjx-script style="vertical-align: -0.15em;"><mjx-mi class="mjx-i" size="s"><mjx-c class="mjx-c1D453 TEX-I"></mjx-c></mjx-mi></mjx-script></mjx-msub></mjx-texatom><mjx-spacer style="margin-top: 1.333em;"></mjx-spacer><mjx-texatom size="s" texclass="ORD"><mjx-msub><mjx-mi class="mjx-i"><mjx-c class="mjx-c1D461 TEX-I"></mjx-c></mjx-mi><mjx-script style="vertical-align: -0.15em;"><mjx-mi class="mjx-i" size="s"><mjx-c class="mjx-c1D45B TEX-I"></mjx-c></mjx-mi></mjx-script></mjx-msub></mjx-texatom></mjx-script></mjx-msubsup><mjx-mi class="mjx-i" space="2"><mjx-c class="mjx-c1D447 TEX-I"></mjx-c></mjx-mi><mjx-mo class="mjx-n"><mjx-c class="mjx-c28"></mjx-c></mjx-mo><mjx-mi class="mjx-i"><mjx-c class="mjx-c1D461 TEX-I"></mjx-c></mjx-mi><mjx-mo class="mjx-n"><mjx-c class="mjx-c29"></mjx-c></mjx-mo><mjx-mi class="mjx-i"><mjx-c class="mjx-c1D70E TEX-I"></mjx-c></mjx-mi><mjx-mo class="mjx-n"><mjx-c class="mjx-c28"></mjx-c></mjx-mo><mjx-texatom texclass="ORD"><mjx-mi class="mjx-b"><mjx-c class="mjx-c1D42B TEX-B"></mjx-c></mjx-mi></mjx-texatom><mjx-mo class="mjx-n"><mjx-c class="mjx-c28"></mjx-c></mjx-mo><mjx-mi class="mjx-i"><mjx-c class="mjx-c1D461 TEX-I"></mjx-c></mjx-mi><mjx-mo class="mjx-n"><mjx-c class="mjx-c29"></mjx-c></mjx-mo><mjx-mo class="mjx-n"><mjx-c class="mjx-c29"></mjx-c></mjx-mo><mjx-texatom texclass="ORD"><mjx-mi class="mjx-b"><mjx-c class="mjx-c1D41C TEX-B"></mjx-c></mjx-mi></mjx-texatom><mjx-mo class="mjx-n"><mjx-c class="mjx-c28"></mjx-c></mjx-mo><mjx-texatom texclass="ORD"><mjx-mi class="mjx-b"><mjx-c class="mjx-c1D42B TEX-B"></mjx-c></mjx-mi></mjx-texatom><mjx-mo class="mjx-n"><mjx-c class="mjx-c28"></mjx-c></mjx-mo><mjx-mi class="mjx-i"><mjx-c class="mjx-c1D461 TEX-I"></mjx-c></mjx-mi><mjx-mo class="mjx-n"><mjx-c class="mjx-c29"></mjx-c></mjx-mo><mjx-mo class="mjx-n"><mjx-c class="mjx-c2C"></mjx-c></mjx-mo><mjx-texatom space="2" texclass="ORD"><mjx-mi class="mjx-b"><mjx-c class="mjx-c1D41D TEX-B"></mjx-c></mjx-mi></mjx-texatom><mjx-mo class="mjx-n"><mjx-c class="mjx-c29"></mjx-c></mjx-mo><mjx-mi class="mjx-i"><mjx-c class="mjx-c1D451 TEX-I"></mjx-c></mjx-mi><mjx-mi class="mjx-i"><mjx-c class="mjx-c1D461 TEX-I"></mjx-c></mjx-mi></mjx-math><mjx-assistive-mml unselectable="on" display="block"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><mi>C</mi><mo stretchy="false">(</mo><mrow data-mjx-texclass="ORD"><mi mathvariant="bold">r</mi></mrow><mo stretchy="false">)</mo><mo>=</mo><msubsup><mo data-mjx-texclass="OP">∫</mo><mrow data-mjx-texclass="ORD"><msub><mi>t</mi><mi>n</mi></msub></mrow><mrow data-mjx-texclass="ORD"><msub><mi>t</mi><mi>f</mi></msub></mrow></msubsup><mi>T</mi><mo stretchy="false">(</mo><mi>t</mi><mo stretchy="false">)</mo><mi>σ</mi><mo stretchy="false">(</mo><mrow data-mjx-texclass="ORD"><mi mathvariant="bold">r</mi></mrow><mo stretchy="false">(</mo><mi>t</mi><mo stretchy="false">)</mo><mo stretchy="false">)</mo><mrow data-mjx-texclass="ORD"><mi mathvariant="bold">c</mi></mrow><mo stretchy="false">(</mo><mrow data-mjx-texclass="ORD"><mi mathvariant="bold">r</mi></mrow><mo stretchy="false">(</mo><mi>t</mi><mo stretchy="false">)</mo><mo>,</mo><mrow data-mjx-texclass="ORD"><mi mathvariant="bold">d</mi></mrow><mo stretchy="false">)</mo><mi>d</mi><mi>t</mi></math></mjx-assistive-mml></mjx-container>
+                where <mjx-container class="MathJax CtxtMenu_Attached_0" jax="CHTML" tabindex="0" ctxtmenu_counter="37" style="font-size: 113.1%; position: relative;"><mjx-math class="MJX-TEX" aria-hidden="true"><mjx-mi class="mjx-i"><mjx-c class="mjx-c1D447 TEX-I"></mjx-c></mjx-mi><mjx-mo class="mjx-n"><mjx-c class="mjx-c28"></mjx-c></mjx-mo><mjx-mi class="mjx-i"><mjx-c class="mjx-c1D461 TEX-I"></mjx-c></mjx-mi><mjx-mo class="mjx-n"><mjx-c class="mjx-c29"></mjx-c></mjx-mo><mjx-mo class="mjx-n" space="4"><mjx-c class="mjx-c3D"></mjx-c></mjx-mo><mjx-mi class="mjx-n" space="4"><mjx-c class="mjx-c65"></mjx-c><mjx-c class="mjx-c78"></mjx-c><mjx-c class="mjx-c70"></mjx-c></mjx-mi><mjx-mo class="mjx-n"><mjx-c class="mjx-c2061"></mjx-c></mjx-mo><mjx-mrow space="2"><mjx-mo class="mjx-lop"><mjx-c class="mjx-c28 TEX-S2"></mjx-c></mjx-mo><mjx-mo class="mjx-n"><mjx-c class="mjx-c2212"></mjx-c></mjx-mo><mjx-msubsup space="2"><mjx-mo class="mjx-sop"><mjx-c class="mjx-c222B TEX-S1"></mjx-c></mjx-mo><mjx-script style="vertical-align: -0.341em; margin-left: -0.138em;"><mjx-texatom size="s" texclass="ORD" style="margin-left: 0.276em;"><mjx-mi class="mjx-i"><mjx-c class="mjx-c1D461 TEX-I"></mjx-c></mjx-mi></mjx-texatom><mjx-spacer style="margin-top: 0.423em;"></mjx-spacer><mjx-texatom size="s" texclass="ORD"><mjx-msub><mjx-mi class="mjx-i"><mjx-c class="mjx-c1D461 TEX-I"></mjx-c></mjx-mi><mjx-script style="vertical-align: -0.15em;"><mjx-mi class="mjx-i" size="s"><mjx-c class="mjx-c1D45B TEX-I"></mjx-c></mjx-mi></mjx-script></mjx-msub></mjx-texatom></mjx-script></mjx-msubsup><mjx-mi class="mjx-i" space="2"><mjx-c class="mjx-c1D70E TEX-I"></mjx-c></mjx-mi><mjx-mo class="mjx-n"><mjx-c class="mjx-c28"></mjx-c></mjx-mo><mjx-texatom texclass="ORD"><mjx-mi class="mjx-b"><mjx-c class="mjx-c1D42B TEX-B"></mjx-c></mjx-mi></mjx-texatom><mjx-mo class="mjx-n"><mjx-c class="mjx-c28"></mjx-c></mjx-mo><mjx-mi class="mjx-i"><mjx-c class="mjx-c1D460 TEX-I"></mjx-c></mjx-mi><mjx-mo class="mjx-n"><mjx-c class="mjx-c29"></mjx-c></mjx-mo><mjx-mo class="mjx-n"><mjx-c class="mjx-c29"></mjx-c></mjx-mo><mjx-mi class="mjx-i"><mjx-c class="mjx-c1D451 TEX-I"></mjx-c></mjx-mi><mjx-mi class="mjx-i"><mjx-c class="mjx-c1D460 TEX-I"></mjx-c></mjx-mi><mjx-mo class="mjx-lop"><mjx-c class="mjx-c29 TEX-S2"></mjx-c></mjx-mo></mjx-mrow></mjx-math><mjx-assistive-mml unselectable="on" display="inline"><math xmlns="http://www.w3.org/1998/Math/MathML"><mi>T</mi><mo stretchy="false">(</mo><mi>t</mi><mo stretchy="false">)</mo><mo>=</mo><mi>exp</mi><mo data-mjx-texclass="NONE">⁡</mo><mrow data-mjx-texclass="INNER"><mo data-mjx-texclass="OPEN">(</mo><mo>−</mo><msubsup><mo data-mjx-texclass="OP">∫</mo><mrow data-mjx-texclass="ORD"><msub><mi>t</mi><mi>n</mi></msub></mrow><mrow data-mjx-texclass="ORD"><mi>t</mi></mrow></msubsup><mi>σ</mi><mo stretchy="false">(</mo><mrow data-mjx-texclass="ORD"><mi mathvariant="bold">r</mi></mrow><mo stretchy="false">(</mo><mi>s</mi><mo stretchy="false">)</mo><mo stretchy="false">)</mo><mi>d</mi><mi>s</mi><mo data-mjx-texclass="CLOSE">)</mo></mrow></math></mjx-assistive-mml></mjx-container> is the transmittance
+                (probability the ray travels from <mjx-container class="MathJax CtxtMenu_Attached_0" jax="CHTML" tabindex="0" ctxtmenu_counter="38" style="font-size: 113.1%; position: relative;"><mjx-math class="MJX-TEX" aria-hidden="true"><mjx-msub><mjx-mi class="mjx-i"><mjx-c class="mjx-c1D461 TEX-I"></mjx-c></mjx-mi><mjx-script style="vertical-align: -0.15em;"><mjx-mi class="mjx-i" size="s"><mjx-c class="mjx-c1D45B TEX-I"></mjx-c></mjx-mi></mjx-script></mjx-msub></mjx-math><mjx-assistive-mml unselectable="on" display="inline"><math xmlns="http://www.w3.org/1998/Math/MathML"><msub><mi>t</mi><mi>n</mi></msub></math></mjx-assistive-mml></mjx-container> to <mjx-container class="MathJax CtxtMenu_Attached_0" jax="CHTML" tabindex="0" ctxtmenu_counter="39" style="font-size: 113.1%; position: relative;"><mjx-math class="MJX-TEX" aria-hidden="true"><mjx-mi class="mjx-i"><mjx-c class="mjx-c1D461 TEX-I"></mjx-c></mjx-mi></mjx-math><mjx-assistive-mml unselectable="on" display="inline"><math xmlns="http://www.w3.org/1998/Math/MathML"><mi>t</mi></math></mjx-assistive-mml></mjx-container> without hitting
+                anything).
+            </p>
+
+            <p>
+                The discrete approximation used in practice is:
+                <mjx-container class="MathJax CtxtMenu_Attached_0" jax="CHTML" display="true" tabindex="0" ctxtmenu_counter="40" style="font-size: 113.1%; position: relative;"><mjx-math display="true" class="MJX-TEX" aria-hidden="true" style="margin-left: 0px; margin-right: 0px;"><mjx-texatom texclass="ORD"><mjx-mover><mjx-over style="padding-bottom: 0.105em; padding-left: 0.475em; margin-bottom: -0.531em;"><mjx-mo class="mjx-n" style="width: 0px; margin-left: -0.25em;"><mjx-c class="mjx-c5E"></mjx-c></mjx-mo></mjx-over><mjx-base><mjx-mi class="mjx-i"><mjx-c class="mjx-c1D436 TEX-I"></mjx-c></mjx-mi></mjx-base></mjx-mover></mjx-texatom><mjx-mo class="mjx-n"><mjx-c class="mjx-c28"></mjx-c></mjx-mo><mjx-texatom texclass="ORD"><mjx-mi class="mjx-b"><mjx-c class="mjx-c1D42B TEX-B"></mjx-c></mjx-mi></mjx-texatom><mjx-mo class="mjx-n"><mjx-c class="mjx-c29"></mjx-c></mjx-mo><mjx-mo class="mjx-n" space="4"><mjx-c class="mjx-c3D"></mjx-c></mjx-mo><mjx-munderover space="4"><mjx-over style="padding-bottom: 0.2em; padding-left: 0.408em;"><mjx-texatom size="s" texclass="ORD"><mjx-mi class="mjx-i"><mjx-c class="mjx-c1D441 TEX-I"></mjx-c></mjx-mi></mjx-texatom></mjx-over><mjx-box><mjx-munder><mjx-row><mjx-base><mjx-mo class="mjx-lop"><mjx-c class="mjx-c2211 TEX-S2"></mjx-c></mjx-mo></mjx-base></mjx-row><mjx-row><mjx-under style="padding-top: 0.167em; padding-left: 0.148em;"><mjx-texatom size="s" texclass="ORD"><mjx-mi class="mjx-i"><mjx-c class="mjx-c1D456 TEX-I"></mjx-c></mjx-mi><mjx-mo class="mjx-n"><mjx-c class="mjx-c3D"></mjx-c></mjx-mo><mjx-mn class="mjx-n"><mjx-c class="mjx-c31"></mjx-c></mjx-mn></mjx-texatom></mjx-under></mjx-row></mjx-munder></mjx-box></mjx-munderover><mjx-msub space="2"><mjx-mi class="mjx-i"><mjx-c class="mjx-c1D447 TEX-I"></mjx-c></mjx-mi><mjx-script style="vertical-align: -0.15em; margin-left: -0.12em;"><mjx-mi class="mjx-i" size="s"><mjx-c class="mjx-c1D456 TEX-I"></mjx-c></mjx-mi></mjx-script></mjx-msub><mjx-mo class="mjx-n"><mjx-c class="mjx-c28"></mjx-c></mjx-mo><mjx-mn class="mjx-n"><mjx-c class="mjx-c31"></mjx-c></mjx-mn><mjx-mo class="mjx-n" space="3"><mjx-c class="mjx-c2212"></mjx-c></mjx-mo><mjx-mi class="mjx-n" space="3"><mjx-c class="mjx-c65"></mjx-c><mjx-c class="mjx-c78"></mjx-c><mjx-c class="mjx-c70"></mjx-c></mjx-mi><mjx-mo class="mjx-n"><mjx-c class="mjx-c2061"></mjx-c></mjx-mo><mjx-mo class="mjx-n"><mjx-c class="mjx-c28"></mjx-c></mjx-mo><mjx-mo class="mjx-n"><mjx-c class="mjx-c2212"></mjx-c></mjx-mo><mjx-msub><mjx-mi class="mjx-i"><mjx-c class="mjx-c1D70E TEX-I"></mjx-c></mjx-mi><mjx-script style="vertical-align: -0.15em;"><mjx-mi class="mjx-i" size="s"><mjx-c class="mjx-c1D456 TEX-I"></mjx-c></mjx-mi></mjx-script></mjx-msub><mjx-msub><mjx-mi class="mjx-i"><mjx-c class="mjx-c1D6FF TEX-I"></mjx-c></mjx-mi><mjx-script style="vertical-align: -0.15em;"><mjx-mi class="mjx-i" size="s"><mjx-c class="mjx-c1D456 TEX-I"></mjx-c></mjx-mi></mjx-script></mjx-msub><mjx-mo class="mjx-n"><mjx-c class="mjx-c29"></mjx-c></mjx-mo><mjx-mo class="mjx-n"><mjx-c class="mjx-c29"></mjx-c></mjx-mo><mjx-msub><mjx-texatom texclass="ORD"><mjx-mi class="mjx-b"><mjx-c class="mjx-c1D41C TEX-B"></mjx-c></mjx-mi></mjx-texatom><mjx-script style="vertical-align: -0.15em;"><mjx-mi class="mjx-i" size="s"><mjx-c class="mjx-c1D456 TEX-I"></mjx-c></mjx-mi></mjx-script></mjx-msub></mjx-math><mjx-assistive-mml unselectable="on" display="block"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><mrow data-mjx-texclass="ORD"><mover><mi>C</mi><mo stretchy="false">^</mo></mover></mrow><mo stretchy="false">(</mo><mrow data-mjx-texclass="ORD"><mi mathvariant="bold">r</mi></mrow><mo stretchy="false">)</mo><mo>=</mo><munderover><mo data-mjx-texclass="OP">∑</mo><mrow data-mjx-texclass="ORD"><mi>i</mi><mo>=</mo><mn>1</mn></mrow><mrow data-mjx-texclass="ORD"><mi>N</mi></mrow></munderover><msub><mi>T</mi><mi>i</mi></msub><mo stretchy="false">(</mo><mn>1</mn><mo>−</mo><mi>exp</mi><mo data-mjx-texclass="NONE">⁡</mo><mo stretchy="false">(</mo><mo>−</mo><msub><mi>σ</mi><mi>i</mi></msub><msub><mi>δ</mi><mi>i</mi></msub><mo stretchy="false">)</mo><mo stretchy="false">)</mo><msub><mrow data-mjx-texclass="ORD"><mi mathvariant="bold">c</mi></mrow><mi>i</mi></msub></math></mjx-assistive-mml></mjx-container>
+                where:
+            </p>
+            <ul>
+                <li><mjx-container class="MathJax CtxtMenu_Attached_0" jax="CHTML" tabindex="0" ctxtmenu_counter="41" style="font-size: 113.1%; position: relative;"><mjx-math class="MJX-TEX" aria-hidden="true"><mjx-msub><mjx-mi class="mjx-i"><mjx-c class="mjx-c1D447 TEX-I"></mjx-c></mjx-mi><mjx-script style="vertical-align: -0.15em; margin-left: -0.12em;"><mjx-mi class="mjx-i" size="s"><mjx-c class="mjx-c1D456 TEX-I"></mjx-c></mjx-mi></mjx-script></mjx-msub><mjx-mo class="mjx-n" space="4"><mjx-c class="mjx-c3D"></mjx-c></mjx-mo><mjx-mi class="mjx-n" space="4"><mjx-c class="mjx-c65"></mjx-c><mjx-c class="mjx-c78"></mjx-c><mjx-c class="mjx-c70"></mjx-c></mjx-mi><mjx-mo class="mjx-n"><mjx-c class="mjx-c2061"></mjx-c></mjx-mo><mjx-mrow space="2"><mjx-mo class="mjx-lop"><mjx-c class="mjx-c28 TEX-S2"></mjx-c></mjx-mo><mjx-mo class="mjx-n"><mjx-c class="mjx-c2212"></mjx-c></mjx-mo><mjx-munderover space="2" limits="false"><mjx-mo class="mjx-sop"><mjx-c class="mjx-c2211 TEX-S1"></mjx-c></mjx-mo><mjx-script style="vertical-align: -0.285em; margin-left: 0px;"><mjx-texatom size="s" texclass="ORD"><mjx-mi class="mjx-i"><mjx-c class="mjx-c1D456 TEX-I"></mjx-c></mjx-mi><mjx-mo class="mjx-n"><mjx-c class="mjx-c2212"></mjx-c></mjx-mo><mjx-mn class="mjx-n"><mjx-c class="mjx-c31"></mjx-c></mjx-mn></mjx-texatom><mjx-spacer style="margin-top: 0.233em;"></mjx-spacer><mjx-texatom size="s" texclass="ORD"><mjx-mi class="mjx-i"><mjx-c class="mjx-c1D457 TEX-I"></mjx-c></mjx-mi><mjx-mo class="mjx-n"><mjx-c class="mjx-c3D"></mjx-c></mjx-mo><mjx-mn class="mjx-n"><mjx-c class="mjx-c31"></mjx-c></mjx-mn></mjx-texatom></mjx-script></mjx-munderover><mjx-msub space="2"><mjx-mi class="mjx-i"><mjx-c class="mjx-c1D70E TEX-I"></mjx-c></mjx-mi><mjx-script style="vertical-align: -0.15em;"><mjx-mi class="mjx-i" size="s"><mjx-c class="mjx-c1D457 TEX-I"></mjx-c></mjx-mi></mjx-script></mjx-msub><mjx-msub><mjx-mi class="mjx-i"><mjx-c class="mjx-c1D6FF TEX-I"></mjx-c></mjx-mi><mjx-script style="vertical-align: -0.15em;"><mjx-mi class="mjx-i" size="s"><mjx-c class="mjx-c1D457 TEX-I"></mjx-c></mjx-mi></mjx-script></mjx-msub><mjx-mo class="mjx-lop"><mjx-c class="mjx-c29 TEX-S2"></mjx-c></mjx-mo></mjx-mrow></mjx-math><mjx-assistive-mml unselectable="on" display="inline"><math xmlns="http://www.w3.org/1998/Math/MathML"><msub><mi>T</mi><mi>i</mi></msub><mo>=</mo><mi>exp</mi><mo data-mjx-texclass="NONE">⁡</mo><mrow data-mjx-texclass="INNER"><mo data-mjx-texclass="OPEN">(</mo><mo>−</mo><munderover><mo data-mjx-texclass="OP">∑</mo><mrow data-mjx-texclass="ORD"><mi>j</mi><mo>=</mo><mn>1</mn></mrow><mrow data-mjx-texclass="ORD"><mi>i</mi><mo>−</mo><mn>1</mn></mrow></munderover><msub><mi>σ</mi><mi>j</mi></msub><msub><mi>δ</mi><mi>j</mi></msub><mo data-mjx-texclass="CLOSE">)</mo></mrow></math></mjx-assistive-mml></mjx-container>
+                    is the accumulated transmittance</li>
+                <li><mjx-container class="MathJax CtxtMenu_Attached_0" jax="CHTML" tabindex="0" ctxtmenu_counter="42" style="font-size: 113.1%; position: relative;"><mjx-math class="MJX-TEX" aria-hidden="true"><mjx-mo class="mjx-n"><mjx-c class="mjx-c28"></mjx-c></mjx-mo><mjx-mn class="mjx-n"><mjx-c class="mjx-c31"></mjx-c></mjx-mn><mjx-mo class="mjx-n" space="3"><mjx-c class="mjx-c2212"></mjx-c></mjx-mo><mjx-mi class="mjx-n" space="3"><mjx-c class="mjx-c65"></mjx-c><mjx-c class="mjx-c78"></mjx-c><mjx-c class="mjx-c70"></mjx-c></mjx-mi><mjx-mo class="mjx-n"><mjx-c class="mjx-c2061"></mjx-c></mjx-mo><mjx-mo class="mjx-n"><mjx-c class="mjx-c28"></mjx-c></mjx-mo><mjx-mo class="mjx-n"><mjx-c class="mjx-c2212"></mjx-c></mjx-mo><mjx-msub><mjx-mi class="mjx-i"><mjx-c class="mjx-c1D70E TEX-I"></mjx-c></mjx-mi><mjx-script style="vertical-align: -0.15em;"><mjx-mi class="mjx-i" size="s"><mjx-c class="mjx-c1D456 TEX-I"></mjx-c></mjx-mi></mjx-script></mjx-msub><mjx-msub><mjx-mi class="mjx-i"><mjx-c class="mjx-c1D6FF TEX-I"></mjx-c></mjx-mi><mjx-script style="vertical-align: -0.15em;"><mjx-mi class="mjx-i" size="s"><mjx-c class="mjx-c1D456 TEX-I"></mjx-c></mjx-mi></mjx-script></mjx-msub><mjx-mo class="mjx-n"><mjx-c class="mjx-c29"></mjx-c></mjx-mo><mjx-mo class="mjx-n"><mjx-c class="mjx-c29"></mjx-c></mjx-mo></mjx-math><mjx-assistive-mml unselectable="on" display="inline"><math xmlns="http://www.w3.org/1998/Math/MathML"><mo stretchy="false">(</mo><mn>1</mn><mo>−</mo><mi>exp</mi><mo data-mjx-texclass="NONE">⁡</mo><mo stretchy="false">(</mo><mo>−</mo><msub><mi>σ</mi><mi>i</mi></msub><msub><mi>δ</mi><mi>i</mi></msub><mo stretchy="false">)</mo><mo stretchy="false">)</mo></math></mjx-assistive-mml></mjx-container> is the probability of
+                    terminating at sample <mjx-container class="MathJax CtxtMenu_Attached_0" jax="CHTML" tabindex="0" ctxtmenu_counter="43" style="font-size: 113.1%; position: relative;"><mjx-math class="MJX-TEX" aria-hidden="true"><mjx-mi class="mjx-i"><mjx-c class="mjx-c1D456 TEX-I"></mjx-c></mjx-mi></mjx-math><mjx-assistive-mml unselectable="on" display="inline"><math xmlns="http://www.w3.org/1998/Math/MathML"><mi>i</mi></math></mjx-assistive-mml></mjx-container></li>
+                <li><mjx-container class="MathJax CtxtMenu_Attached_0" jax="CHTML" tabindex="0" ctxtmenu_counter="44" style="font-size: 113.1%; position: relative;"><mjx-math class="MJX-TEX" aria-hidden="true"><mjx-msub><mjx-mi class="mjx-i"><mjx-c class="mjx-c1D6FF TEX-I"></mjx-c></mjx-mi><mjx-script style="vertical-align: -0.15em;"><mjx-mi class="mjx-i" size="s"><mjx-c class="mjx-c1D456 TEX-I"></mjx-c></mjx-mi></mjx-script></mjx-msub></mjx-math><mjx-assistive-mml unselectable="on" display="inline"><math xmlns="http://www.w3.org/1998/Math/MathML"><msub><mi>δ</mi><mi>i</mi></msub></math></mjx-assistive-mml></mjx-container> is the distance between samples</li>
+            </ul>
+
+            <h3>Part 2.6: Training on Lego Dataset</h3>
+
+            <p>
+                I trained the NeRF on the provided Lego dataset (200×200
+                resolution, 100 training images). Training
+                parameters:
+            </p>
+            <ul>
+                <li><strong>Batch size:</strong> 10,000 rays per iteration</li>
+                <li><strong>Learning rate:</strong> 5e-4</li>
+                <li><strong>Optimizer:</strong> Adam</li>
+                <li><strong>Number of samples per ray:</strong> 64</li>
+                <li><strong>Training iterations:</strong> 1000</li>
+            </ul>
+
+            <h4>Training Progression</h4>
+            <p>
+                The network gradually learns to represent the 3D scene. Early
+                iterations show blurry, low-frequency
+                reconstructions, while later iterations capture fine details:
+            </p>
+
+            <div class="image-grid" style="grid-template-columns: repeat(5, 1fr);">
+                <div class="image-container">
+                    <img src="results/nerf_training/train_images/train_step_0000.png" alt="Step 0">
+                    <div class="image-caption">Iteration 0</div>
+                </div>
+                <div class="image-container">
+                    <img src="results/nerf_training/train_images/train_step_0200.png" alt="Step 200">
+                    <div class="image-caption">Iteration 200</div>
+                </div>
+                <div class="image-container">
+                    <img src="results/nerf_training/train_images/train_step_0400.png" alt="Step 400">
+                    <div class="image-caption">Iteration 400</div>
+                </div>
+                <div class="image-container">
+                    <img src="results/nerf_training/train_images/train_step_0700.png" alt="Step 700">
+                    <div class="image-caption">Iteration 700</div>
+                </div>
+                <div class="image-container">
+                    <img src="results/nerf_training/train_images/train_step_0999.png" alt="Step 999">
+                    <div class="image-caption">Iteration 999</div>
+                </div>
+            </div>
+
+            <h4>Validation Set Results</h4>
+            <p>
+                Validation images show how well the NeRF generalizes to unseen
+                camera poses:
+            </p>
+
+            <div class="image-grid" style="grid-template-columns: repeat(5, 1fr);">
+                <div class="image-container">
+                    <img src="results/nerf_training/val_images/val_step_0000.png" alt="Val Step 0">
+                    <div class="image-caption">Iteration 0</div>
+                </div>
+                <div class="image-container">
+                    <img src="results/nerf_training/val_images/val_step_0200.png" alt="Val Step 200">
+                    <div class="image-caption">Iteration 200</div>
+                </div>
+                <div class="image-container">
+                    <img src="results/nerf_training/val_images/val_step_0400.png" alt="Val Step 400">
+                    <div class="image-caption">Iteration 400</div>
+                </div>
+                <div class="image-container">
+                    <img src="results/nerf_training/val_images/val_step_0700.png" alt="Val Step 700">
+                    <div class="image-caption">Iteration 700</div>
+                </div>
+                <div class="image-container">
+                    <img src="results/nerf_training/val_images/val_step_0999.png" alt="Val Step 999">
+                    <div class="image-caption">Iteration 999</div>
+                </div>
+            </div>
+
+            <h4>PSNR on Validation Set</h4>
+            <div class="image-container span-all">
+                <img src="results/nerf_training/training_curves.png" alt="NeRF Training Curves" class="large-image">
+                <div class="image-caption">Training Loss and Validation PSNR
+                    Curves</div>
+            </div>
+
+            <p>
+                The validation PSNR reaches above 23 dB, meeting the project
+                requirements. The loss decreases
+                consistently, and the PSNR improves steadily, indicating
+                successful training.
+            </p>
+
+            <h4>Novel View Synthesis</h4>
+            <p>
+                After training, I rendered novel views using the test camera
+                poses. The NeRF successfully synthesizes
+                photorealistic views from arbitrary camera positions:
+            </p>
+
+            <div class="image-container span-all">
+                <img src="results/nerf_training/novel_views_sample.png" alt="Novel Views Sample" class="large-image">
+                <div class="image-caption">Sample Novel Views from Test Cameras
+                </div>
+            </div>
+
+            <h4>Spherical Rendering Video</h4>
+            <p>
+                I created a video showing the Lego scene from a spherical camera
+                path, demonstrating smooth novel view
+                synthesis:
+            </p>
+
+            <div class="video-container">
+                <video controls="">
+                    <source src="results/nerf_training/nerf_novel_views.mp4" type="video/mp4">
+                    Your browser does not support the video tag.
+                </video>
+                <div class="image-caption">Spherical Rendering of Lego Scene
+                </div>
+            </div>
+        </div>
+
+        <!-- Part 2.6: Training with Your Own Data -->
+        <div class="section">
+            <h2>Part 2.6: Training with Your Own Data</h2>
+
+            <p>
+                I trained a NeRF on my own captured dataset (the purple
+                penguin). This
+                required several adjustments from the
+                Lego dataset:
+            </p>
+
+            <div class="highlight">
+                <h4>Key Changes for Real Data</h4>
+                <ul>
+                    <li><strong>Near/Far Planes:</strong> Adjusted from (2.0,
+                        6.0) to (0.02, 0.5) meters to match the
+                        scale of my object</li>
+                    <li><strong>Training Iterations:</strong> Trained for 2000
+                        iterations instead to achieve good quality</li>
+                    <li><strong>Batched Inference:</strong> Used batched
+                        inference for training to avoid memory errors</li>
+                </ul>
+            </div>
+
+            <h3>Training Progression</h3>
+            <p>
+                The training shows gradual improvement in reconstruction
+                quality:
+            </p>
+
+            <div class="image-grid" style="grid-template-columns: repeat(5, 1fr);">
+                <div class="image-container">
+                    <img src="results/my_training/train_images/train_step_0000.png" alt="My Train Step 0">
+                    <div class="image-caption">Iteration 0</div>
+                </div>
+                <div class="image-container">
+                    <img src="results/my_training/train_images/train_step_0500.png" alt="My Train Step 500">
+                    <div class="image-caption">Iteration 500</div>
+                </div>
+                <div class="image-container">
+                    <img src="results/my_training/train_images/train_step_1000.png" alt="My Train Step 1000">
+                    <div class="image-caption">Iteration 1000</div>
+                </div>
+                <div class="image-container">
+                    <img src="results/my_training/train_images/train_step_1500.png" alt="My Train Step 1500">
+                    <div class="image-caption">Iteration 1500</div>
+                </div>
+                <div class="image-container">
+                    <img src="results/my_training/train_images/train_step_1999.png" alt="My Train Step 2000">
+                    <div class="image-caption">Iteration 2000</div>
+                </div>
+            </div>
+
+            <h3>Validation Results</h3>
+            <div class="image-grid" style="grid-template-columns: repeat(5, 1fr);">
+                <div class="image-container">
+                    <img src="results/my_training/val_images/val_step_0000.png" alt="My Val Step 0">
+                    <div class="image-caption">Iteration 0</div>
+                </div>
+                <div class="image-container">
+                    <img src="results/my_training/val_images/val_step_0500.png" alt="My Val Step 500">
+                    <div class="image-caption">Iteration 500</div>
+                </div>
+                <div class="image-container">
+                    <img src="results/my_training/val_images/val_step_1000.png" alt="My Val Step 1000">
+                    <div class="image-caption">Iteration 1000</div>
+                </div>
+                <div class="image-container">
+                    <img src="results/my_training/val_images/val_step_1500.png" alt="My Val Step 1500">
+                    <div class="image-caption">Iteration 1500</div>
+                </div>
+                <div class="image-container">
+                    <img src="results/my_training/val_images/val_step_1999.png" alt="My Val Step 2000">
+                    <div class="image-caption">Iteration 2000</div>
+                </div>
+            </div>
+
+            <h3>Training Loss Curve</h3>
+            <div class="image-container span-all">
+                <img src="results/my_training/training_curves.png" alt="My Training Curves" class="large-image">
+                <div class="image-caption">Training Loss Over Iterations</div>
+            </div>
+
+            <p>
+                The training loss decreases steadily, showing successful
+                optimization. The network learns to represent
+                the 3D structure and appearance of the shoe from the multi-view
+                images.
+            </p>
+
+            <h3>Novel View Rendering</h3>
+            <p>
+                I rendered a circular camera path around the object to create a
+                novel view video:
+            </p>
+
+            <div class="gif-container">
+                <img src="results/my_training/nerf_circle.gif" alt="Novel View Circle">
+                <div class="image-caption">Novel Views from Circular Camera Path
+                </div>
+            </div>
+
+            <div class="technical-details">
+                <h4>Rendering Details</h4>
+                <p>
+                    The circular path was generated by:
+                </p>
+                <ul>
+                    <li>Starting from a position near the object (derived from
+                        training camera poses)</li>
+                    <li>Rotating the camera around the object while keeping it
+                        pointed at the origin</li>
+                    <li>Rendering 30 frames for a smooth animation</li>
+                </ul>
+                <p>
+                    The NeRF successfully synthesizes photorealistic views from
+                    these novel camera positions,
+                    demonstrating that it has learned a complete 3D
+                    representation of the scene. The interesting thing is that
+                    the NeRF creates highly accurate reconstructions even for
+                    the views where the tag was hidden; those views were not
+                    part of the training set.
+                </p>
+            </div>
+        </div>
+
+        <!-- Conclusion -->
+        <div class="section">
+            <h2>Conclusion</h2>
+            <p>
+                This project successfully implements a complete NeRF pipeline,
+                from camera calibration and 3D scanning
+                to training and rendering neural radiance fields. Key
+                achievements:
+            </p>
+            <ul>
+                <li><strong>Camera Calibration:</strong> Successfully calibrated
+                    camera using ArUco tags and estimated
+                    poses for all images</li>
+                <li><strong>2D Neural Fields:</strong> Demonstrated neural field
+                    representation for 2D images, exploring
+                    hyperparameter effects</li>
+                <li><strong>3D NeRF:</strong> Implemented full NeRF pipeline
+                    with volume rendering, achieving PSNR &gt; 23
+                    dB on validation set</li>
+                <li><strong>Novel View Synthesis:</strong> Successfully rendered
+                    photorealistic novel views from
+                    arbitrary camera positions</li>
+                <li><strong>Real Data:</strong> Trained NeRF on custom captured
+                    dataset, demonstrating the pipeline's
+                    applicability to real-world scenarios</li>
+            </ul>
+            <p>
+                The project demonstrates the power of neural radiance fields for
+                3D scene representation and novel view
+                synthesis. The learned implicit representation captures both
+                geometry and appearance, enabling
+                photorealistic rendering from any viewpoint.
+            </p>
+        </div>
+    </div>
+
+
+</body>
