@@ -165,7 +165,6 @@
             <p>This project investigates Neural Radiance Fields (NeRF), an innovative method for representing 3D scenes and generating novel viewpoints. NeRF leverages a neural network to model a continuous volumetric scene, mapping 3D spatial coordinates and viewing directions to corresponding color and density values. By applying inverse rendering techniques to calibrated multi-view images, we can train the network to produce renderings from unseen perspectives. </p>
         </div>
 
-        <!-- Part 0: Camera Calibration and 3D Scanning -->
         <div class="section">
             <h2>Part 0: Calibrating Your Camera and Capturing a 3D Scan</h2>
 
@@ -299,11 +298,7 @@
             </div>
 
             <p>
-                <!-- The visualizations show cameras arranged in a semi-circular arc
-                around the object, with each camera
-                frustum displaying the corresponding captured image. This
-                confirms that the pose estimation successfully
-                recovered the camera positions and orientations. -->
+      
             </p>
 
             <h3>Part 0.5: Undistorting Images and Creating Dataset</h3>
@@ -336,7 +331,6 @@
             </ul>
         </div>
 
-        <!-- Part 1: Fit a Neural Field to a 2D Image -->
         <div class="section">
             <h2>Part 1: Fit a Neural Field to a 2D Image</h2>
 
@@ -436,12 +430,7 @@
 </div>
 
             <h3>Hyperparameters</h3>
-            <!-- <p>
-                I explored the effect of different hyperparameters on
-                reconstruction quality. Below are results for
-                different combinations of max positional encoding frequency
-                (<mjx-container class="MathJax CtxtMenu_Attached_0" jax="CHTML" tabindex="0" ctxtmenu_counter="11" style="font-size: 113.1%; position: relative;"><mjx-math class="MJX-TEX" aria-hidden="true"><mjx-mi class="mjx-i"><mjx-c class="mjx-c1D43F TEX-I"></mjx-c></mjx-mi></mjx-math><mjx-assistive-mml unselectable="on" display="inline"><math xmlns="http://www.w3.org/1998/Math/MathML"><mi>L</mi></math></mjx-assistive-mml></mjx-container>) and network width:
-            </p> -->
+
 
             <h4>Hyperparameter Grid</h4>
             <div class="image-grid" style="grid-template-columns: repeat(2, 1fr);">
@@ -464,17 +453,7 @@ Summary: Low L (no high frequencies) -> smooth, blurry outputs; increasing width
             <div class="highlight">
                 <h4></h4>
                 <ul>
-                    <!-- <li><strong>Low frequency (L=4):</strong> Produces blurry
-                        results with poor high-frequency detail
-                        reconstruction. The network struggles to capture fine
-                        edges and textures.</li>
-                    <li><strong>High frequency (L=10):</strong> Enables sharp
-                        reconstruction with fine details. This is
-                        essential for photorealistic results.</li>
-                    <li><strong>Narrow network (Width=64):</strong> Limited
-                        capacity leads to smoother but less
-                        detailed outputs. Good for low-frequency content but
-                        struggles with complex textures.</li> -->
+   
                     <li><strong>Wide network (Width=256):</strong> This wide net allows learning of complex patterns
                         and fine details.</li>
                 </ul>
@@ -510,7 +489,6 @@ Summary: Low L (no high frequencies) -> smooth, blurry outputs; increasing width
             </p>
         </div>
 
-        <!-- Part 2: Fit a Neural Radiance Field from Multi-view Images -->
         <div class="section">
             <h2>Part 2: Fit a Neural Radiance Field from Multi-view Images</h2>
 
@@ -679,7 +657,7 @@ Summary: Low L (no high frequencies) -> smooth, blurry outputs; increasing width
             </p>
 
             <p>
-                The discrete approximation used in practice is:
+                The approximation:
                 <mjx-container class="MathJax CtxtMenu_Attached_0" jax="CHTML" display="true" tabindex="0" ctxtmenu_counter="40" style="font-size: 113.1%; position: relative;"><mjx-math display="true" class="MJX-TEX" aria-hidden="true" style="margin-left: 0px; margin-right: 0px;"><mjx-texatom texclass="ORD"><mjx-mover><mjx-over style="padding-bottom: 0.105em; padding-left: 0.475em; margin-bottom: -0.531em;"><mjx-mo class="mjx-n" style="width: 0px; margin-left: -0.25em;"><mjx-c class="mjx-c5E"></mjx-c></mjx-mo></mjx-over><mjx-base><mjx-mi class="mjx-i"><mjx-c class="mjx-c1D436 TEX-I"></mjx-c></mjx-mi></mjx-base></mjx-mover></mjx-texatom><mjx-mo class="mjx-n"><mjx-c class="mjx-c28"></mjx-c></mjx-mo><mjx-texatom texclass="ORD"><mjx-mi class="mjx-b"><mjx-c class="mjx-c1D42B TEX-B"></mjx-c></mjx-mi></mjx-texatom><mjx-mo class="mjx-n"><mjx-c class="mjx-c29"></mjx-c></mjx-mo><mjx-mo class="mjx-n" space="4"><mjx-c class="mjx-c3D"></mjx-c></mjx-mo><mjx-munderover space="4"><mjx-over style="padding-bottom: 0.2em; padding-left: 0.408em;"><mjx-texatom size="s" texclass="ORD"><mjx-mi class="mjx-i"><mjx-c class="mjx-c1D441 TEX-I"></mjx-c></mjx-mi></mjx-texatom></mjx-over><mjx-box><mjx-munder><mjx-row><mjx-base><mjx-mo class="mjx-lop"><mjx-c class="mjx-c2211 TEX-S2"></mjx-c></mjx-mo></mjx-base></mjx-row><mjx-row><mjx-under style="padding-top: 0.167em; padding-left: 0.148em;"><mjx-texatom size="s" texclass="ORD"><mjx-mi class="mjx-i"><mjx-c class="mjx-c1D456 TEX-I"></mjx-c></mjx-mi><mjx-mo class="mjx-n"><mjx-c class="mjx-c3D"></mjx-c></mjx-mo><mjx-mn class="mjx-n"><mjx-c class="mjx-c31"></mjx-c></mjx-mn></mjx-texatom></mjx-under></mjx-row></mjx-munder></mjx-box></mjx-munderover><mjx-msub space="2"><mjx-mi class="mjx-i"><mjx-c class="mjx-c1D447 TEX-I"></mjx-c></mjx-mi><mjx-script style="vertical-align: -0.15em; margin-left: -0.12em;"><mjx-mi class="mjx-i" size="s"><mjx-c class="mjx-c1D456 TEX-I"></mjx-c></mjx-mi></mjx-script></mjx-msub><mjx-mo class="mjx-n"><mjx-c class="mjx-c28"></mjx-c></mjx-mo><mjx-mn class="mjx-n"><mjx-c class="mjx-c31"></mjx-c></mjx-mn><mjx-mo class="mjx-n" space="3"><mjx-c class="mjx-c2212"></mjx-c></mjx-mo><mjx-mi class="mjx-n" space="3"><mjx-c class="mjx-c65"></mjx-c><mjx-c class="mjx-c78"></mjx-c><mjx-c class="mjx-c70"></mjx-c></mjx-mi><mjx-mo class="mjx-n"><mjx-c class="mjx-c2061"></mjx-c></mjx-mo><mjx-mo class="mjx-n"><mjx-c class="mjx-c28"></mjx-c></mjx-mo><mjx-mo class="mjx-n"><mjx-c class="mjx-c2212"></mjx-c></mjx-mo><mjx-msub><mjx-mi class="mjx-i"><mjx-c class="mjx-c1D70E TEX-I"></mjx-c></mjx-mi><mjx-script style="vertical-align: -0.15em;"><mjx-mi class="mjx-i" size="s"><mjx-c class="mjx-c1D456 TEX-I"></mjx-c></mjx-mi></mjx-script></mjx-msub><mjx-msub><mjx-mi class="mjx-i"><mjx-c class="mjx-c1D6FF TEX-I"></mjx-c></mjx-mi><mjx-script style="vertical-align: -0.15em;"><mjx-mi class="mjx-i" size="s"><mjx-c class="mjx-c1D456 TEX-I"></mjx-c></mjx-mi></mjx-script></mjx-msub><mjx-mo class="mjx-n"><mjx-c class="mjx-c29"></mjx-c></mjx-mo><mjx-mo class="mjx-n"><mjx-c class="mjx-c29"></mjx-c></mjx-mo><mjx-msub><mjx-texatom texclass="ORD"><mjx-mi class="mjx-b"><mjx-c class="mjx-c1D41C TEX-B"></mjx-c></mjx-mi></mjx-texatom><mjx-script style="vertical-align: -0.15em;"><mjx-mi class="mjx-i" size="s"><mjx-c class="mjx-c1D456 TEX-I"></mjx-c></mjx-mi></mjx-script></mjx-msub></mjx-math><mjx-assistive-mml unselectable="on" display="block"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><mrow data-mjx-texclass="ORD"><mover><mi>C</mi><mo stretchy="false">^</mo></mover></mrow><mo stretchy="false">(</mo><mrow data-mjx-texclass="ORD"><mi mathvariant="bold">r</mi></mrow><mo stretchy="false">)</mo><mo>=</mo><munderover><mo data-mjx-texclass="OP">∑</mo><mrow data-mjx-texclass="ORD"><mi>i</mi><mo>=</mo><mn>1</mn></mrow><mrow data-mjx-texclass="ORD"><mi>N</mi></mrow></munderover><msub><mi>T</mi><mi>i</mi></msub><mo stretchy="false">(</mo><mn>1</mn><mo>−</mo><mi>exp</mi><mo data-mjx-texclass="NONE">⁡</mo><mo stretchy="false">(</mo><mo>−</mo><msub><mi>σ</mi><mi>i</mi></msub><msub><mi>δ</mi><mi>i</mi></msub><mo stretchy="false">)</mo><mo stretchy="false">)</mo><msub><mrow data-mjx-texclass="ORD"><mi mathvariant="bold">c</mi></mrow><mi>i</mi></msub></math></mjx-assistive-mml></mjx-container>
                 where:
             </p>
@@ -712,58 +690,6 @@ Summary: Low L (no high frequencies) -> smooth, blurry outputs; increasing width
                 iterations are supposed to contain blurry, low-frequency
                 reconstructions, while later iterations capture fine details:
             </p>
-<!-- 
-            <div class="image-grid" style="grid-template-columns: repeat(5, 1fr);">
-                <div class="image-container">
-                    <img src="results/nerf_training/train_images/train_step_0000.png" alt="Step 0">
-                    <div class="image-caption">Iteration 0</div>
-                </div>
-                <div class="image-container">
-                    <img src="results/nerf_training/train_images/train_step_0200.png" alt="Step 200">
-                    <div class="image-caption">Iteration 200</div>
-                </div>
-                <div class="image-container">
-                    <img src="results/nerf_training/train_images/train_step_0400.png" alt="Step 400">
-                    <div class="image-caption">Iteration 400</div>
-                </div>
-                <div class="image-container">
-                    <img src="results/nerf_training/train_images/train_step_0700.png" alt="Step 700">
-                    <div class="image-caption">Iteration 700</div>
-                </div>
-                <div class="image-container">
-                    <img src="results/nerf_training/train_images/train_step_0999.png" alt="Step 999">
-                    <div class="image-caption">Iteration 999</div>
-                </div>
-            </div> -->
-
-            <!-- <h4>Validation Set Results</h4>
-            <p>
-                Validation images show how well the NeRF generalizes to unseen
-                camera poses:
-            </p> -->
-
-            <!-- <div class="image-grid" style="grid-template-columns: repeat(5, 1fr);">
-                <div class="image-container">
-                    <img src="results/nerf_training/val_images/val_step_0000.png" alt="Val Step 0">
-                    <div class="image-caption">Iteration 0</div>
-                </div>
-                <div class="image-container">
-                    <img src="results/nerf_training/val_images/val_step_0200.png" alt="Val Step 200">
-                    <div class="image-caption">Iteration 200</div>
-                </div>
-                <div class="image-container">
-                    <img src="results/nerf_training/val_images/val_step_0400.png" alt="Val Step 400">
-                    <div class="image-caption">Iteration 400</div>
-                </div>
-                <div class="image-container">
-                    <img src="results/nerf_training/val_images/val_step_0700.png" alt="Val Step 700">
-                    <div class="image-caption">Iteration 700</div>
-                </div>
-                <div class="image-container">
-                    <img src="results/nerf_training/val_images/val_step_0999.png" alt="Val Step 999">
-                    <div class="image-caption">Iteration 999</div>
-                </div>
-            </div> -->
 
             <h4>PSNR on Validation Set</h4>
             <div class="image-container span-all">
@@ -776,17 +702,12 @@ Summary: Low L (no high frequencies) -> smooth, blurry outputs; increasing width
                 The validation PSNR was between 10-12 dB.
             </p>
 
-            <!-- <h4>Novel View Synthesis</h4> -->
             <p>
                 After training, I rendered the views using the test camera
                 poses. 
             </p>
 
-            <!-- <div class="image-container span-all">
-                <img src="results/nerf_training/novel_views_sample.png" alt="Novel Views Sample" class="large-image">
-                <div class="image-caption">Sample Novel Views from Test Cameras
-                </div>
-            </div> -->
+   
 
             <h4>Spherical Rendering Video</h4>
             <p>
@@ -803,7 +724,6 @@ Summary: Low L (no high frequencies) -> smooth, blurry outputs; increasing width
             </div>
         </div>
 
-        <!-- Part 2.6: Training with Your Own Data -->
         <div class="section">
             <h2>Part 2.6: Training with Your Own Data</h2>
 
@@ -824,8 +744,7 @@ Summary: Low L (no high frequencies) -> smooth, blurry outputs; increasing width
 
             <h3>Training Loss Curve</h3>
             <p>
-                <!-- The training shows gradual improvement in reconstruction
-                quality: -->
+             
             </p>
 
             <div class="image-grid" style="grid-template-columns: repeat(5, 1fr);">
@@ -833,22 +752,6 @@ Summary: Low L (no high frequencies) -> smooth, blurry outputs; increasing width
                     <img src="part1_images/lafufu_training_loss_curve.png" alt="My Train Step 0">
                     <div class="image-caption">Loss Curve</div>
                 </div>
-                <!-- <div class="image-container">
-                    <img src="results/my_training/train_images/train_step_0500.png" alt="My Train Step 500">
-                    <div class="image-caption">Iteration 500</div>
-                </div>
-                <div class="image-container">
-                    <img src="results/my_training/train_images/train_step_1000.png" alt="My Train Step 1000">
-                    <div class="image-caption">Iteration 1000</div>
-                </div>
-                <div class="image-container">
-                    <img src="results/my_training/train_images/train_step_1500.png" alt="My Train Step 1500">
-                    <div class="image-caption">Iteration 1500</div>
-                </div>
-                <div class="image-container">
-                    <img src="results/my_training/train_images/train_step_1999.png" alt="My Train Step 2000">
-                    <div class="image-caption">Iteration 2000</div>
-                </div> -->
             </div>
 
             <h3> PSNR </h3>
@@ -857,22 +760,6 @@ Summary: Low L (no high frequencies) -> smooth, blurry outputs; increasing width
                     <img src="part1_images/psnr_labbub.png"My Val Step 0">
                     <div class="image-caption">PSNR</div>
                 </div>
-                <!-- <div class="image-container">
-                    <img src="results/my_training/val_images/val_step_0500.png" alt="My Val Step 500">
-                    <div class="image-caption">Iteration 500</div>
-                </div>
-                <div class="image-container">
-                    <img src="results/my_training/val_images/val_step_1000.png" alt="My Val Step 1000">
-                    <div class="image-caption">Iteration 1000</div>
-                </div>
-                <div class="image-container">
-                    <img src="results/my_training/val_images/val_step_1500.png" alt="My Val Step 1500">
-                    <div class="image-caption">Iteration 1500</div>
-                </div>
-                <div class="image-container">
-                    <img src="results/my_training/val_images/val_step_1999.png" alt="My Val Step 2000">
-                    <div class="image-caption">Iteration 2000</div>
-                </div> -->
             </div>
 
             <h3>Training Progression</h3>
@@ -898,65 +785,8 @@ Summary: Low L (no high frequencies) -> smooth, blurry outputs; increasing width
                 </div>
             </div>
 
-            <!-- <div class="technical-details">
-                <h4>Rendering Details</h4>
-                <p>
-                    The circular path was generated by:
-                </p>
-                <ul>
-                    <li>Starting from a position near the object (derived from
-                        training camera poses)</li>
-                    <li>Rotating the camera around the object while keeping it
-                        pointed at the origin</li>
-                    <li>Rendering 30 frames for a smooth animation</li>
-                </ul>
-                <p>
-                    The NeRF successfully synthesizes photorealistic views from
-                    these novel camera positions,
-                    demonstrating that it has learned a complete 3D
-                    representation of the scene. The interesting thing is that
-                    the NeRF creates highly accurate reconstructions even for
-                    the views where the tag was hidden; those views were not
-                    part of the training set.
-                </p>
-            </div> -->
         </div>
 
-        <!-- Conclusion -->
-
-        <!-- <div class="section">
-            <h2>Conclusion</h2>
-            <p>
-                This project successfully implements a complete NeRF pipeline,
-                from camera calibration and 3D scanning
-                to training and rendering neural radiance fields. Key
-                achievements:
-            </p>
-            <ul>
-                <li><strong>Camera Calibration:</strong> Successfully calibrated
-                    camera using ArUco tags and estimated
-                    poses for all images</li>
-                <li><strong>2D Neural Fields:</strong> Demonstrated neural field
-                    representation for 2D images, exploring
-                    hyperparameter effects</li>
-                <li><strong>3D NeRF:</strong> Implemented full NeRF pipeline
-                    with volume rendering, achieving PSNR &gt; 23
-                    dB on validation set</li>
-                <li><strong>Novel View Synthesis:</strong> Successfully rendered
-                    photorealistic novel views from
-                    arbitrary camera positions</li>
-                <li><strong>Real Data:</strong> Trained NeRF on custom captured
-                    dataset, demonstrating the pipeline's
-                    applicability to real-world scenarios</li>
-            </ul>
-            <p>
-                The project demonstrates the power of neural radiance fields for
-                3D scene representation and novel view
-                synthesis. The learned implicit representation captures both
-                geometry and appearance, enabling
-                photorealistic rendering from any viewpoint.
-            </p>
-        </div> -->
     </div>
 
 
