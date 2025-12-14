@@ -1,0 +1,945 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CS 180 Project 5: Fun with Diffusion Models</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f9f9f9;
+        }
+        h1, h2, h3 {
+            color: #2c3e50;
+        }
+        h1 {
+            text-align: center;
+            border-bottom: 2px solid #2c3e50;
+            padding-bottom: 10px;
+        }
+        h2 {
+            border-bottom: 1px solid #ccc;
+            padding-top: 20px;
+            padding-bottom: 10px;
+            margin-top: 40px;
+        }
+        .container {
+            background-color: #fff;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+        .section {
+            margin-bottom: 30px;
+        }
+        .gallery {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 15px;
+            margin: 20px 0;
+        }
+        .gallery-item {
+            text-align: center;
+            flex: 1;
+            min-width: 150px;
+        }
+        .gallery-item img {
+            max-width: 100%;
+            height: auto;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-shadow: 2px 2px 5px rgba(0,0,0,0.1);
+        }
+        .caption {
+            font-size: 0.9em;
+            color: #666;
+            margin-top: 5px;
+            font-weight: bold;
+        }
+        .code-block {
+            background-color: #f4f4f4;
+            padding: 15px;
+            border-left: 5px solid #2c3e50;
+            font-family: 'Courier New', Courier, monospace;
+            overflow-x: auto;
+            margin: 15px 0;
+        }
+        .response-text {
+            background-color: #e8f4fc;
+            padding: 15px;
+            border-radius: 5px;
+            border: 1px solid #b6d4fe;
+            margin: 10px 0;
+        }
+        /* Specific grid for image-to-image sequences */
+        .sequence-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        .sequence-grid img {
+            width: 100%;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>Project 5: Fun With Diffusion Models!</h1>
+    <p style="text-align: center;"><strong>Name:</strong> Hillary Khuu </p>
+
+    <h2>Part A: The Power of Diffusion Models!</h2>
+
+    <div class="section">
+        <h3>Part 0: Setup</h3>
+        <p><strong>Deliverables:</strong> Prompts, Embeddings, Generated Images, and Reflection.</p>
+        
+        <div class="response-text">
+            <p><strong>Random Seed Used:</strong> 100</p>
+ 
+<p>
+For this project, I used the DeepFloyd IF diffusion model. DeepFloyd operates in two stages: the first stage generates low-resolution images of size <code>64 × 64</code>, and the second stage upsamples them to <code>256 × 256</code>.
+</p>
+
+<h4>Sampling from the Model</h4>
+
+<p>
+The sampling pipeline involves both stages: <code>stage_1</code> produces the initial low-resolution image, and <code>stage_2</code> refines and upsamples it. Each stage accepts a <code>num_inference_steps</code> parameter, which allows balancing image quality against generation speed.
+</p>
+
+        <div class="gallery">
+            <div class="gallery-item">
+                <img src="images5a/book_skyline.png" alt="Prompt 1 Result">
+                <div class="caption">Prompt: "a city skyline built from stacks of books" <br> Steps = 20
+            </div>
+                        <div class="gallery-item">
+                <img src="images5a/skylinebook100.png" alt="Prompt 1 Result">
+                <div class="caption">Prompt: "a city skyline built from stacks of books" <br> Steps = 100
+            </div>
+            <div class="gallery-item">
+                <img src="images5a/a%20bear%20drinking%20a%20beer.png" alt="Prompt 2 Result">
+                <div class="caption">Prompt: "a bear drinking a beer" <br> Steps = 20
+            </div>
+                        <div class="gallery-item">
+                <img src="images5a/bearbeer100.png" alt="Prompt 2 Result">
+                <div class="caption">Prompt: "a bear drinking a beer" <br> Steps = 100
+            </div>
+            <div class="gallery-item">
+                <img src="images5a/butterfly_church.png" alt="Prompt 3 Result">
+                <div class="caption">Prompt: "butterflies with stained-glass wings over a cathedral" <br> Steps = 20
+            </div>
+                        <div class="gallery-item">
+                <img src="images5a/butterflycathedral100.png" alt="Prompt 3 Result">
+                <div class="caption">Prompt: "butterflies with stained-glass wings over a cathedral" <br> Steps = 100
+            </div>
+        </div>
+    </div>
+    <p><p>
+I chose the prompts<em>'a city skyline built from stacks of books'</em>, <em>'butterflies with stained-glass wings over a cathedral'</em>, and <em>'a bear drinking a beer'</em> and saw images generated with only 20 inference steps lacked fine detail. For example, the book-based city skyline at 100 produced an image that looked more like actual skyscrapers in a city, while the image at 20 just looked like stacks of boooks. Higher step counts allow the model to better capture complex structure.
+</p>
+<p>
+In general, increasing the number of steps enhances fine details and complexity, but can sometimes reduce overall realism, as textures and shapes begin to look more stylized. I had to regenerate a lot of images with steps=100 because it just looked weird.</p>
+</p>
+
+    <div class="section">
+        I use "sampling loops" that leverage the pretrained DeepFloyd denoisers. These loops can generate high-quality images similar to the examples shown above.
+</p>
+
+<p>
+A diffusion model works by reversing a noise process. Starting with a clean image <code>x₀</code>, we can iteratively add noise to produce <code>xₜ</code> at timestep <code>t</code>, until the image is nearly pure noise at <code>T</code>. The model then predicts the noise in <code>xₜ</code> and removes it, either fully to estimate <code>x₀</code> or partially to step to <code>xₜ₋₁</code>. Repeating this process from pure noise <code>x_T</code> back to <code>x₀</code> produces a clean generated image.
+</p>
+
+<h4>Setup</h4>
+
+<p>
+The noise added at each step is determined by pretrained noise coefficients <code>ᾱₜ</code>. The number of coefficients matches the number of sampling steps. 
+</p>
+        <h3>Part 1.1: Implementing the Forward Process</h3>
+        <div class="response-text">
+            <p><strong>Implementation approach:</strong> See this formual for the forward process: 
+<p>
+<code>q(x<sub>t</sub> | x<sub>0</sub>) = 𝒩(x<sub>t</sub>; √(ᾱ<sub>t</sub>) x<sub>0</sub>, (1 − ᾱ<sub>t</sub>) I)</code><br>
+<code>x<sub>t</sub> = √(ᾱ<sub>t</sub>) x<sub>0</sub> + √(1 − ᾱ<sub>t</sub>) ε, &nbsp; ε ~ 𝒩(0, I)</code>
+</p>
+
+<p>
+We use the <code>alphas_cumprod</code> variable, which stores the cumulative product of ᾱ for all timesteps <code>t</code>. The forward process will be applied to the Campanile test image at timesteps <code>t = 250, 500, 750</code>.
+</p>
+
+</p>
+            
+        </div>
+        
+        <h4>Campanile at Noise Levels</h4>
+
+    
+  <div class="gallery-item">
+    <img src="images5a/1.1/campanile.jpg" alt="Original" width="64" height="64">
+    <div class="caption">Original</div>
+</div>
+        <div class="gallery">
+
+            <div class="gallery-item">
+                <img src="images5a/1.1/campnoise250.png" alt="t=250">
+                <div class="caption">t=250</div>
+            </div>
+            <div class="gallery-item">
+                <img src="images5a/1.1/campnoise500.png" alt="t=500">
+                <div class="caption">t=500</div>
+            </div>
+            <div class="gallery-item">
+                <img src="images5a/1.1/campnoise750.png" alt="t=750">
+                <div class="caption">t=750</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="section">
+        <h3>Part 1.2: Classical Denoising</h3>
+        <p>Gaussian Blur Denoising results (not as good as learned denoisers).</p>
+        <div class="gallery">
+            <div class="gallery-item">
+                <img src="images5a/campnoise250.png" alt="Noisy 250">
+                <div class="caption">Noisy t=250</div>
+            </div>
+            <div class="gallery-item">
+                <img src="images5a/1.2/campgaus250_12.png" alt="Gaussian 250">
+                <div class="caption">Gaussian Blur t=250</div>
+            </div>
+        </div>
+        <div class="gallery">
+            <div class="gallery-item">
+                <img src="images5a/campnoise500.png" alt="Noisy 500">
+                <div class="caption">Noisy t=500</div>
+            </div>
+            <div class="gallery-item">
+                <img src="images5a/1.2/campgaus500_12.png" alt="Gaussian 500">
+                <div class="caption">Gaussian Blur t=500</div>
+            </div>
+        </div>
+        <div class="gallery">
+             <div class="gallery-item">
+                <img src="images5a/campnoise750.png" alt="Noisy 750">
+                <div class="caption">Noisy t=750</div>
+            </div>
+            <div class="gallery-item">
+                <img src="images5a/1.2/campgaus750_12.png" alt="Gaussian 750">
+                <div class="caption">Gaussian Blur t=750</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="section">
+        <h3>Part 1.3: One-Step Denoising</h3>
+        <p>Using the pre-trained UNet to estimate noise and remove it in one step.</p>
+        
+        <h4>t = 250</h4>
+        <div class="gallery">
+            <div class="gallery-item"><img src="images5a/campnoise250.png" alt="Noisy"><div class="caption">Noisy</div></div>
+            <div class="gallery-item"><img src="images5a/1.3/denoised250_high.png" alt="Reconstructed"><div class="caption">One-Step Denoised</div></div>
+        </div>
+
+        <h4>t = 500</h4>
+        <div class="gallery">
+            <div class="gallery-item"><img src="images5a/campnoise500.png" alt="Noisy"><div class="caption">Noisy</div></div>
+            <div class="gallery-item"><img src="images5a/1.3/denoised500_high.png" alt="Reconstructed"><div class="caption">One-Step Denoised</div></div>
+        </div>
+
+        <h4>t = 750</h4>
+        <div class="gallery">
+            <div class="gallery-item"><img src="images5a/campnoise750.png" alt="Noisy"><div class="caption">Noisy</div></div>
+            <div class="gallery-item"><img src="images5a/1.3/denoised750_high.png" alt="Reconstructed"><div class="caption">One-Step Denoised</div></div>
+        </div>
+    </div>
+
+    <div class="section">
+        <h3>Part 1.4: Iterative Denoising</h3>
+        <div class="response-text">
+            <p><strong>Implementation:</strong> <ul>
+  <li><strong>Strided timesteps:</strong> Create a reversed sequence of timesteps (e.g., 990 → 0 in steps of 30) to control the denoising schedule and set it in the stage 1 scheduler.</li>
+  <li><strong>Variance addition:</strong> The <code>add_variance</code> function injects learned variance at each step to better model uncertainty in the denoising process.</li>
+  <li><strong>Iterative denoising:</strong> Starting from a noisy image at a given timestep, <code>iterative_denoise</code> applies the UNet repeatedly. At each step, it:
+    <ul>
+      <li>Predicts the noise and variance</li>
+      <li>Computes a one-step estimate of the clean image</li>
+      <li>Updates the image with the predicted variance</li>
+    </ul>
+  </li>
+  <li><strong>One-step clean estimate:</strong> Computes a direct estimate of the clean image from the noisy input using the UNet output and alpha coefficients.</li>
+  <li><strong>Gaussian blur:</strong> Applies a Gaussian filter to the noisy image for comparison using <code>torchvision.transforms.functional.gaussian_blur</code>.</li>
+</ul>
+
+></p>
+        </div>
+
+        <h4>Progressive Denoising (Every 5th loop)</h4>
+        <div class="sequence-grid">
+            <div class="gallery-item"><img src="images5a/1.4/iterdenoise30.png"><div class="caption">t=90</div></div>
+            <div class="gallery-item"><img src="images5a/1.4/iterdenoise25.png"><div class="caption">t=240</div></div>
+            <div class="gallery-item"><img src="images5a/1.4/iterdenoise20.png"><div class="caption">t=390</div></div>
+            <div class="gallery-item"><img src="images5a/1.4/iterdenoise15.png"><div class="caption">t=540</div></div>
+            <div class="gallery-item"><img src="images5a/1.4/iterdenoise0.png"><div class="caption">t=690</div></div>
+        </div>
+
+        <h4>Comparison of Approaches</h4>
+        <div class="gallery">
+            <div class="gallery-item">
+                <img src="images5a/1.4/iterdenoise30.png" alt="Iterative">
+                <div class="caption">Iterative Denoised</div>
+            </div>
+            <div class="gallery-item">
+                <img src="images5a/1.3/denoised500_high.png" alt="One Step">
+                <div class="caption">One-Step Denoised</div>
+            </div>
+            <div class="gallery-item">
+                <img src="images5a/1.4/iterdenoise_gausblur.png" alt="Gaussian">
+                <div class="caption">Gaussian Blurred</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="section">
+        <h3>Part 1.5: Diffusion Model Sampling</h3>
+        <p>Generating images from scratch (pure noise) using "a high quality photo".</p>
+        <div class="gallery">
+            <div class="gallery-item"><img src="images5a/1.5/sample1.png"><div class="caption">Sample 1</div></div>
+            <div class="gallery-item"><img src="images5a/1.5/sample2.png"><div class="caption">Sample 2</div></div>
+            <div class="gallery-item"><img src="images5a/1.5/sample3.png"><div class="caption">Sample 3</div></div>
+            <div class="gallery-item"><img src="images5a/1.5/sample4.png"><div class="caption">Sample 4</div></div>
+            <div class="gallery-item"><img src="images5a/1.5/sample5.png"><div class="caption">Sample 5</div></div>
+        </div>
+    </div>
+
+    <div class="section">
+        <h3>Part 1.6: Classifier-Free Guidance (CFG)</h3>
+        <div class="response-text">
+            <p> 
+<p>
+<code>ε = ε<sub>u</sub> + γ (ε<sub>c</sub> − ε<sub>u</sub>)</code>
+</p>iterative_denoise_cfg: Two embeddings are used: a conditional prompt (prompt_embeds) and an unconditional prompt (uncond_prompt_embeds).
+
+At each timestep, the UNet predicts noise for both embeddings.
+
+The predictions are combined using the CFG formula: guided_noise_est = uncond + scale * (cond - uncond), where scale controls the strength of guidance.
+
+The guided noise is used to estimate the clean image x0 and compute the next less-noisy image (pred_prev_image).
+
+This process is repeated over all timesteps, denoising the image.</p>
+        </div>
+        <p>Generated images with CFG Scale > 1:</p>
+        <div class="gallery">
+            <div class="gallery-item"><img src="images5a/1.6/cfg1.png"><div class="caption">CFG Sample 1</div></div>
+            <div class="gallery-item"><img src="images5a/1.6/cfg2.png"><div class="caption">CFG Sample 2</div></div>
+            <div class="gallery-item"><img src="images5a/1.6/cfg3.png"><div class="caption">CFG Sample 3</div></div>
+            <div class="gallery-item"><img src="images5a/1.6/cfg4.png"><div class="caption">CFG Sample 4</div></div>
+            <div class="gallery-item"><img src="images5a/1.6/cfg5.png"><div class="caption">CFG Sample 5</div></div>
+        </div>
+    </div>
+
+    <div class="section">
+        <h3>Part 1.7: Image-to-image Translation</h3>
+        <p>SDEdit algorithm. Gradually reducing noise level to edit images. We add a litle noise to the original Campanile image and force it back onto the image manifold without conditioning. According to the SDEdit paper, "SDEdit allows stroke-based image synthesis, stroke-based image editing and image compositing without task specific optimization." </p>
+        
+        <h4>Campanile Edits</h4>
+        <div class="sequence-grid">
+            <div class="gallery-item"><img src="images5a/1.7/editsteps1.png"><div class="caption">i_start=1</div></div>
+            <div class="gallery-item"><img src="images5a/1.7/editsteps3.png"><div class="caption">i_start=3</div></div>
+            <div class="gallery-item"><img src="images5a/1.7/editsteps5.png"><div class="caption">i_start=5</div></div>
+            <div class="gallery-item"><img src="images5a/1.7/editsteps7.png"><div class="caption">i_start=7</div></div>
+            <div class="gallery-item"><img src="images5a/1.7/editsteps10.png"><div class="caption">i_start=10</div></div>
+            <div class="gallery-item"><img src="images5a/1.7/editsteps20.png"><div class="caption">i_start=20</div></div>
+            <div class="gallery-item"><img src="images5a/1.1/campanile.jpg"><div class="caption">Original</div></div>
+        </div>
+
+<h4>Custom Image 1 Edits: Clash Royale Goblin Emoji :p</h4>
+<div class="sequence-grid">
+    <div class="gallery-item"><img src="images5a/1.7/goblineditsteps1.png"><div class="caption">i_start=1</div></div>
+    <div class="gallery-item"><img src="images5a/1.7/goblineditsteps3.png"><div class="caption">i_start=3</div></div>
+    <div class="gallery-item"><img src="images5a/1.7/goblineditsteps5.png"><div class="caption">i_start=5</div></div>
+    <div class="gallery-item"><img src="images5a/1.7/goblineditsteps7.png"><div class="caption">i_start=7</div></div>
+    <div class="gallery-item"><img src="images5a/1.7/goblineditsteps10.png"><div class="caption">i_start=10</div></div>
+    <div class="gallery-item"><img src="images5a/1.7/goblineditsteps20.png"><div class="caption">i_start=20</div></div>
+    <div class="gallery-item"><img src="images5a/goblin64.jpg"><div class="caption">Original</div></div>
+</div>
+
+<h4>Custom Image 2 Edits: Roses</h4>
+<div class="sequence-grid">
+    <div class="gallery-item"><img src="images5a/1.7/roseseditsteps1.png"><div class="caption">i_start=1</div></div>
+    <div class="gallery-item"><img src="images5a/1.7/roseseditsteps3.png"><div class="caption">i_start=3</div></div>
+    <div class="gallery-item"><img src="images5a/1.7/roseseditsteps5.png"><div class="caption">i_start=5</div></div>
+    <div class="gallery-item"><img src="images5a/1.7/roseseditsteps7.png"><div class="caption">i_start=7</div></div>
+    <div class="gallery-item"><img src="images5a/1.7/roseseditsteps10.png"><div class="caption">i_start=10</div></div>
+    <div class="gallery-item"><img src="images5a/1.7/roseseditsteps20.png"><div class="caption">i_start=20</div></div>
+    <div class="gallery-item"><img src="images5a/roses16.png"><div class="caption">Original</div></div>
+</div>
+
+    </div>
+
+    <div class="section">
+        <h3>Part 1.7.1: Editing Hand-Drawn and Web Images</h3>
+        
+        <h4>Web Image: smiley from Google</h4>
+                    <div class="gallery-item"><img src="images5a/1.7.1/smiley.png"><div class="caption">original</div></div>
+
+        <div class="sequence-grid">
+            <!-- <div class="gallery-item"><img src="images5a/1.7.1/penguin_allsteps.png"><div class="caption"></div></div>
+            <div class="gallery-item"><img src="images5a/1.7.1/tiger_allsteps.png"><div class="caption">i_start=10</div></div> -->
+            <div class="gallery-item"><img src="images5a/1.7.1/smiley_allsteps.png"><div class="caption"></div></div>
+            <!-- <div class="gallery-item"><img src="images5a/penguin64.jpg"><div class="caption">Original</div></div> -->
+        </div>
+
+
+        <h4>Hand Drawn 1: an image I drew of a penguin, my favorite animal!</h4>
+                    <div class="gallery-item"><img src="images5a/penguin64.jpg"><div class="caption">original</div></div>
+
+        <div class="sequence-grid">
+            <div class="gallery-item"><img src="images5a/1.7.1/penguin_allsteps.png"><div class="caption"></div></div>
+        </div>
+
+        <h4>Hand Drawn 2: a tiger I drew for my grandma</h4>
+                    <div class="gallery-item"><img src="images5a/tiger64.jpg"><div class="caption">original</div></div>
+
+        <div class="sequence-grid">
+            <div class="gallery-item"><img src="images5a/1.7.1/tiger_allsteps.png"><div class="caption"></div></div>
+        </div>
+
+
+    </div>
+
+    <div class="section">
+        <h3>Part 1.7.2: Inpainting</h3>
+        <div class="response-text">
+            <p>inpaint:
+
+Start with from random noise in the masked region.
+
+For each timestep, predict the noise using the UNet for both conditional and unconditional embeddings.
+
+Apply CFG to combine the predictions, enhancing fidelity to the prompt.
+
+Compute the next less-noisy image (pred_prev_image) and add learned variance.
+
+Merge the inpainted region with the original image using the mask: the masked region is updated, and unmasked areas remain from the noisy original.
+
+Repeat until the first timestep, producing a clean inpainted image.</p>
+        </div>
+
+        <h4>Campanile Inpainting</h4>
+        <div class="gallery">
+              <!-- <div class="gallery-item">
+    <img src="images5a/1.1/campanile.jpg" alt="Original" width="64" height="64">
+    <div class="caption">Original</div> -->
+            <div class="gallery-item"><img src="images5a/1.7.2/campanile_mask.png"><div class="caption">Mask</div></div>
+            <div class="gallery-item"><img src="images5a/1.7.2/campanile_inpaint.png"><div class="caption">Inpainted</div></div>
+        </div>
+
+        <h4>Custom Image 1 Inpainting</h4>
+        <div class="gallery">
+            <div class="gallery-item"><img src="images5a/penguin64.jpg"><div class="caption">Original</div></div>
+            <div class="gallery-item"><img src="images5a/1.7.2/penguinmask.jpg"><div class="caption">Mask</div></div>
+            <div class="gallery-item"><img src="images5a/1.7.2/penguin_inpaint.png"><div class="caption">Inpainted - new hat (?)</div></div>
+        </div>
+
+        <h4>Custom Image 2 Inpainting</h4>
+        <div class="gallery">
+            <div class="gallery-item"><img src="images5a/tiger64.jpg"><div class="caption">Original</div></div>
+            <div class="gallery-item"><img src="images5a/1.7.2/tigermask.jpg"><div class="caption">Mask</div></div>
+            <div class="gallery-item"><img src="images5a/1.7.2/tiger_inpaint.png"><div class="caption">Inpainted - new tail!</div></div>
+        </div>
+    </div>
+
+    <div class="section">
+        <h3>Part 1.7.3: Text-Conditional Image-to-image Translation</h3>
+        <p>SDEdit with custom text prompts. Here are the results of text-conditioning applied to the Campanile and other photos using the prompt at noise levels [1, 3, 5, 7, 10, 20]</p>
+        
+        
+        <h4> Snowynille (Snowy Campanile) (Prompt: "an oil painting of a snowy mountain village")</h4>
+        <div class="sequence-grid">
+            <div class="gallery-item"><img src="images5a/1.7.3/snowynille1.png"><div class="caption">Noise 1</div></div>
+            <div class="gallery-item"><img src="images5a/1.7.3/snowynille3.png"><div class="caption">Noise 3</div></div>
+            <div class="gallery-item"><img src="images5a/1.7.3/snowynille5.png"><div class="caption">Noise 5</div></div>
+            <div class="gallery-item"><img src="images5a/1.7.3/snowynille7.png"><div class="caption">Noise 7</div></div>
+            <div class="gallery-item"><img src="images5a/1.7.3/snowynille10.png"><div class="caption">Noise 10</div></div>
+            <div class="gallery-item"><img src="images5a/1.7.3/snowynille20.png"><div class="caption">Noise 20</div></div>
+        </div>
+
+        <h4>Mencsnow (My guinea pig Mencho + Snow) (Prompt: "an oil painting of a snowy mountain village")</h4>
+                <p>He was transformed into a snowy arctic looking wolf</p>
+
+        <div class="sequence-grid">
+            <div class="gallery-item"><img src="images5a/1.7.3/mencsnow1.png"><div class="caption">Noise 1</div></div>
+            <div class="gallery-item"><img src="images5a/1.7.3/mencsnow3.png"><div class="caption">Noise 3</div></div>
+            <div class="gallery-item"><img src="images5a/1.7.3/mencsnow5.png"><div class="caption">Noise 5</div></div>
+            <div class="gallery-item"><img src="images5a/1.7.3/mencsnow7.png"><div class="caption">Noise 7</div></div>
+            <div class="gallery-item"><img src="images5a/1.7.3/mencsnow10.png"><div class="caption">Noise 10</div></div>
+            <div class="gallery-item"><img src="images5a/1.7.3/mencsnow20.png"><div class="caption">Noise 20</div></div>
+        </div>
+
+        <h4> PenguinSnow (Prompt: "an oil painting of a snowy mountain village")</h4>
+        <div class="sequence-grid">
+            <div class="gallery-item"><img src="images5a/1.7.3/pengsnow1.png"><div class="caption">Noise 1</div></div>
+            <div class="gallery-item"><img src="images5a/1.7.3/pengsnow3.png"><div class="caption">Noise 3</div></div>
+            <div class="gallery-item"><img src="images5a/1.7.3/pengsnow5.png"><div class="caption">Noise 5</div></div>
+            <div class="gallery-item"><img src="images5a/1.7.3/pengsnow7.png"><div class="caption">Noise 7</div></div>
+            <div class="gallery-item"><img src="images5a/1.7.3/pengsnow10.png"><div class="caption">Noise 10</div></div>
+            <div class="gallery-item"><img src="images5a/1.7.3/pengsnow20.png"><div class="caption">Noise 20</div></div>
+        </div>
+
+    </div>
+
+    <div class="section">
+        <h3>Part 1.8: Visual Anagrams</h3>
+        <div class="response-text">
+            <p>visual_anagrams: 
+<p>
+The <code>make_flip_illusion</code> function generates a flip-based visual illusionusing diffusion. It takes a starting image and two prompt embeddings, one for the upright view and one for the flipped view. At each timestep, the UNet predicts noise for both paths (upright and vertically flipped), applies classifier-free guidance, and averages the results. The image is progressively denoised while blending the upright and flipped interpretations, producing an image that can appear as one scene when upright and another when flipped.
+</p>
+</p>
+        </div>
+        
+        <h4>Illusion 1: Bear</h4>
+        <div class="gallery">
+            <div class="gallery-item"><img src="images5a/1.8/uprightbear.png"><div class="caption">Right side up<br>Prompt: 'a bear drinking a beer' </div></div>
+            <div class="gallery-item"><img src="images5a/1.8/flippedbear.png"><div class="caption">Flipped<br>Prompt: 'an oil painting of a snowy mountain village'</div></div>
+        </div>
+
+        <h4>Illusion 2: Oasis / Campfire</h4>
+        <div class="gallery">
+            <div class="gallery-item"><img src="images5a/1.8/uprightoasis.png"><div class="caption">Right side up<br>Prompt:  'a desert oasis where palm trees are giant paintbrushes dripping color into the sand'</div></div>
+            <div class="gallery-item"><img src="images5a/1.8/flippedcampireoasis.png"><div class="caption">Flipped<br>Prompt: 'an oil painting of people around a campfire'</div></div>
+        </div>
+
+        <h4>Illusion 3: Rocket / Pencil</h4>
+        <div class="gallery">
+            <div class="gallery-item"><img src="images5a/1.8/uprightrocket.png"><div class="caption">Right side up<br>Prompt: 'a rocket ship'</div></div>
+            <div class="gallery-item"><img src="images5a/1.8/flippedpencil.png"><div class="caption">Flipped<br>Prompt: 'a pencil'</div></div>
+        </div>
+
+        <h4>Illusion 4: Oil Paintings</h4>
+        <div class="gallery">
+            <div class="gallery-item"><img src="images5a/1.8/oilcampfire.png"><div class="caption">Right side up<br>Prompt: 'an oil painting of people around a campfire'</div></div>
+            <div class="gallery-item"><img src="images5a/1.8/oiloldman.png"><div class="caption">Flipped<br>Prompt: 'an oil painting of an old man'</div></div>
+        </div>
+    </div>
+
+    <div class="section">
+        <h3>Part 1.9: Hybrid Images</h3>
+        <div class="response-text">
+            <p><code>make_hybrids</code> creates a hybrid image by blending two prompts at different frequency scales. One prompt guides the <em>low-frequency, far-away</em> details, while the other controls the <em>high-frequency, close-up</em> details. At each timestep, the UNet predicts noise for both prompts using classifier-free guidance. Low-pass and high-pass filtering separates the frequency components, which are then combined to produce a final guided noise estimate. The image is iteratively denoised using this combined noise, resulting in a single image that merges both prompt characteristics at different spatial scales.
+</p>
+        </div>
+
+        <h4>Hybrid Images</h4>
+        <div class="gallery">
+                        <div class="gallery-item">
+                <img src="images5a/1.9/hybrid_bearbeer.png">
+                <div class="caption">bear with bear</div>
+            </div>
+            <div class="gallery-item">
+                <img src="images5a/1.9/hybridbear_village.png">
+                <div class="caption">village</div>
+            </div>
+
+   
+        </div>
+
+        <div class="gallery">
+                     <div class="gallery-item">
+                <img src="images5a/1.9/hybridskull.png">
+                <div class="caption">skull</div>
+            </div>
+            <div class="gallery-item">
+                <img src="images5a/1.9/hybrid_skullwaterfall.png">
+                <div class="caption">waterfall</div>
+            </div>
+  
+        </div>
+
+        <div class="gallery">
+            <div class="gallery-item">
+                <img src="images5a/1.9/hybrid_rocketcitysky.png">
+                <div class="caption">rocket</div>
+            </div>
+            <div class="gallery-item">
+                <img src="images5a/1.9/hybridcitysky_rocket.png">
+                <div class="caption">city in the sky</div>
+            </div>
+            <!-- <div class="gallery-item">
+                <img src="images5a/1.9/hybrid_cathedralrocket.png">
+                <div class="caption">Hybrid of "cathedral" and "rocket"</div>
+            </div>
+            <div class="gallery-item">
+                <img src="images5a/1.9/hybrid_rocketcathedral.png">
+                <div class="caption">Hybrid of "rocket" and "cathedral (alt)"</div>
+            </div> -->
+        </div>
+    </div>
+
+    <h2>Part B: Diffusion Models from Scratch!</h2>
+    <!-- ################## -->
+
+    <div class="section">
+        <h3>Part 1: Training a Single-Step Denoising UNet</h3>
+        <p>Implementation:</p>
+        <ul>
+  <li>
+    <strong>Conv</strong>: A convolutional layer that preserves the spatial resolution of the image while changing only the number of channels.
+  </li>
+  <li>
+    <strong>DownConv</strong>: A convolutional layer that downsamples the input tensor by a factor of 2 in each spatial dimension.
+  </li>
+  <li>
+    <strong>UpConv</strong>: A convolutional layer that upsamples the input tensor by a factor of 2 in each spatial dimension.
+  </li>
+  <li>
+    <strong>Flatten</strong>: An average pooling layer that reduces a <code>7×7</code> spatial tensor to a <code>1×1</code> tensor. The value 7 corresponds to the final height and width after all downsampling operations.
+  </li>
+  <li>
+    <strong>Unflatten</strong>: A convolutional layer that expands (unflattens) a <code>1×1</code> tensor back into a <code>7×7</code> spatial tensor.
+  </li>
+  <li>
+    <strong>Concat</strong>: A channel-wise concatenation of tensors that share the same spatial (2D) dimensions.
+  </li>
+</ul>
+
+        
+        <h4>1.2 Noising Process Visualization</h4>
+        <p>
+The training objective focuses on a denoising task in which a noisy image <em>z</em> is mapped back to its corresponding clean image <em>x</em>. This mapping is learned by minimizing the L2 loss function.
+</p>
+
+<p>
+Training pairs <em>(z, x)</em> are constructed using clean MNIST digit images <em>x</em>. Noise is added according to the following process:
+</p>
+
+<p>
+<code>z = x + σ&epsilon;</code>, where <code>&epsilon; ~ N(0, I)</code>
+</p>
+
+<h3>Visualization of Noise Levels</h3>
+
+<p>
+</p>
+
+        <div class="gallery">
+            <div class="gallery-item">
+                <img src="images_5b/1.2/unet6noises.png" alt="Noising Process">
+                <div class="caption">Varying Sigma on a 6 that's part of MNIST dataset</div>
+            </div>
+        </div>
+
+        <h4>1.2.1 Training (Standard)</h4>
+<p>
+The denoising model was trained under the following setup:
+</p>
+
+<ul>
+  <li>
+    <strong>Objective</strong>: Learn to remove noise from corrupted images <em>z</em>, where noise with <code>σ = 0.5</code> is added to clean images <em>x</em>.
+  </li>
+  <li>
+    <strong>Dataset</strong>: MNIST training set, using a batch size of <code>256</code>. The dataset was shuffled prior to dataloader construction.
+  </li>
+  <li>
+    <strong>Model</strong>: A UNet-based architecture with a hidden dimension of <code>D = 128</code>.
+  </li>
+  <li>
+    <strong>Optimizer</strong>: Adam optimizer with a learning rate of <code>1e-4</code>.
+  </li>
+  <li>
+    <strong>Training Duration</strong>: The model was trained for <code>5</code> epochs.
+  </li>
+</ul>
+
+<p>
+During training, noise was applied dynamically as images were loaded from the dataloader. Because the noise term <em>ε</em> was randomly sampled each time, the model was exposed to different noisy versions of the same images across epochs, which helped improve generalization.
+</p>
+
+
+
+<div class="gallery">
+  <div class="gallery-item">
+    <img src="images_5b/1.2.1/trainingloss.png">
+    <div class="caption">Training Loss Curve</div>
+  </div>
+</div>
+
+<div class="gallery">
+  <div class="gallery-item">
+    <img src="images_5b/1.2.1/epoch1purenoise.png">
+    <div class="caption">Epoch 1 Results</div>
+  </div>
+</div>
+
+<div class="gallery">
+  <div class="gallery-item">
+    <img src="images_5b/1.2.1/epoch5purenoise.png">
+    <div class="caption">Epoch 5 Results</div>
+  </div>
+</div>
+
+
+        <h4>1.2.2 Out-of-Distribution Testing</h4>
+        <p>
+Out of distribution testing evaluates model performance on noise levels that were not seen during training. Although the model was trained solely using noise with <code>σ = 0.5</code>, it was tested on MNIST digits corrupted with a range of noise intensities <code>σ = [0.0, 0.2, 0.4, 0.5, 0.6, 0.8, 1.0]</code>.
+</p>
+
+<h3>Out-of-Distribution Test Results</h3>
+
+<p>
+These evaluations show the generalization ability and the limits of the denoiser when applied to noise levels that fall outside its training distribution.
+</p>
+
+        <div class="gallery">
+            <div class="gallery-item">
+                <img src="images_5b/1.2.2/outofdistributiontesting.png" alt="OOD Results">
+                <div class="caption">Results with varying sigma</div>
+            </div>
+        </div>
+
+        <h4>1.2.3 Denoising Pure Noise</h4>
+        <p>
+The model was evaluated on its ability to transform pure Gaussian noise into meaningful images. This setting can be viewed as beginning from a blank input <code>z = ε</code>, where <code>ε ~ N(0, I)</code>, and iteratively denoising it to obtain a clean output image <code>x</code>.
+</p>
+
+<p>
+A separate denoiser was trained with input consisted solely of pure Gaussian noise <code>ε ~ N(0, I)</code> rather than noisy versions of real images. The model was trained for <code>5</code> epochs.
+</p>
+<div class="gallery">
+    <div class="gallery-item">
+        <img src="images_5b/1.2.2/trainingloss_denoisingpurenoise.png">
+        <div class="caption">Loss Curve (Pure Noise)</div>
+    </div>
+</div>
+
+<div class="gallery">
+    <div class="gallery-item">
+        <img src="images_5b/1.2.2/epoch1purenoise.png">
+        <div class="caption">Epoch 1</div>
+    </div>
+</div>
+
+<div class="gallery">
+    <div class="gallery-item">
+        <img src="images_5b/1.2.2/epoch5purenoise.png">
+        <div class="caption">Epoch 5</div>
+    </div>
+</div>
+        <div class="response-text">
+            <p><strong>Analysis:</strong> After 1 and 5 epochs, the generated images look almost the same. They resemble digits like a 3 or an 8, but they are very faint and blurry, especially around the center. This happens because the model is learning to produce an “average” image that best fits all the training examples. What we see is the average of all MNIST digits made up of the most common strokes found across the dataset.</p>
+        </div>
+    </div>
+
+    <div class="section">
+        <h3>Part 2: Training a Flow Matching Model</h3>
+<p>
+Successful generation requires <em>iterative denoising</em>. To achieve this, we use a technique called flow matching, which trains a UNet model to predict the direction/flow that transforms noisy images into clean ones.
+</p>
+
+<p>
+In the flow matching framework, generation begins with a pure noise image 
+<code>x<sub>0</sub> ~ 𝒩(0, I)</code>, which is gradually refined into a realistic image 
+<code>x<sub>1</sub></code>. Intermediate samples are created by linearly interpolating between the noisy and clean images:
+</p>
+
+<p>
+<code>
+x<sub>t</sub> = (1 − t)x<sub>0</sub> + t x<sub>1</sub>, 
+&nbsp; where &nbsp; x<sub>0</sub> ~ 𝒩(0, I), &nbsp; t ∈ [0, 1]
+</code>
+</p>
+
+<p>
+This interpolation defines a path through image space that connects the noise distribution <code>p<sub>0</sub>(x<sub>0</sub>)</code> to the clean data distribution <code>p<sub>1</sub>(x<sub>1</sub>)</code>. When <code>t</code> is small, the image is close to pure noise; as <code>t</code> increases, it becomes more similar to a clean image.
+</p>
+
+<p>
+The flow can be interpreted as the velocity of this transformation (how the img changes):
+</p>
+
+<p>
+<code>
+u(x<sub>t</sub>, t) = d x<sub>t</sub> / d t = x<sub>1</sub> − x<sub>0</sub>
+</code>
+</p>
+
+<p>
+The learning objective is to train a UNet model <code>u<sub>θ</sub>(x<sub>t</sub>, t)</code> to approximate this flow by minimizing the following loss:
+</p>
+
+<p>
+<code>
+L = 𝔼<sub>x<sub>0</sub>~p<sub>0</sub>, x<sub>1</sub>~p<sub>1</sub>, t~U[0,1]</sub>
+‖(x<sub>1</sub> − x<sub>0</sub>) − u<sub>θ</sub>(x<sub>t</sub>, t)‖²
+</code>
+</p>
+
+        <h4>2.2 Time-Conditioned UNet Training</h4>
+        <h3>Adding Time Conditioning to the UNet</h3>
+
+<p>
+To inclde the scalar timestep <code>t</code> into the UNet, a time-conditioning mechanism was added using fully connected blocks (FCBlocks). This allows the model to adapt its behavior based on the current stage of the denoising process.
+</p>
+
+<p>
+Each FCBlock uses linear layers (<code>nn.Linear</code>) to embed the timestep. Because <code>t</code> is a scalar, the input feature dimension was set to 1.
+</p>
+
+<p>
+Two separate FCBlocks were used to process the normalized timestep <code>t ∈ [0, 1]</code>:
+</p>
+
+<ul>
+  <li>
+    <code>fc1_t</code> produces an embedding <code>t₁</code> that scales the unflatten operation.
+  </li>
+  <li>
+    <code>fc2_t</code> produces an embedding <code>t₂</code> that scales the first upsampling layer (<code>up1</code>).
+  </li>
+</ul>
+
+<h3>Training the Time-Conditioned UNet</h3>
+
+<p>
+For each iteration, a random image <code>x<sub>1</sub></code> was sampled from the training set, a random timestep <code>t</code> was chosen, noise was added to produce <code>x<sub>t</sub></code>, and the network was trained to predict the flow at <code>x<sub>t</sub></code>.
+</p>
+
+<h4>Training Specifications</h4>
+<ul>
+  <li><strong>Objective:</strong> Predict the flow at <code>x<sub>t</sub></code> given a noisy image and timestep</li>
+  <li><strong>Dataset:</strong> MNIST training set, batch size 256</li>
+  <li><strong>Model:</strong> Time-conditioned UNet, hidden dimension <code>D = 128</code></li>
+  <li><strong>Optimizer:</strong> Adam with initial learning rate 1e-4</li>
+</ul>
+
+        <div class="gallery">
+            <div class="gallery-item">
+                <img src="images_5b/2.2/trainingloss_flowmatching.png" alt="Time Cond Loss">
+                <div class="caption">Training Loss Curve</div>
+            </div>
+        </div>
+
+        <h4>2.3 Sampling from Time-Conditioned UNet</h4>
+<div class="gallery">
+  <div class="gallery-item">
+    <img src="images_5b/2.3/flowmatching_epoch1.png">
+    <div class="caption">Epoch 1 Samples</div>
+  </div>
+</div>
+
+<div class="gallery">
+  <div class="gallery-item">
+    <img src="images_5b/2.3/flowmatching_epoch5.png">
+    <div class="caption">Epoch 5 Samples</div>
+  </div>
+</div>
+
+<div class="gallery">
+  <div class="gallery-item">
+    <img src="images_5b/2.3/flowmatching_epoch10.png">
+    <div class="caption">Epoch 10 Samples</div>
+  </div>
+</div>
+
+
+        <h4>2.4 Adding Class-Conditioning</h4>
+        
+<p>
+To enhance image generation and allow control over the digit, the UNet was extended to optionally condition on the digit class (0–9) using two additional FCBlocks.
+</p>
+
+<p>
+The class vector <code>c</code> was one-hot encoded. To support unconditional generation (needed for classifier-free guidance), dropout was applied: 10% of the time (<code>p<sub>uncond</sub> = 0.1</code>), the class vector was set to zero.
+</p>
+
+<p>
+Conditioning was implemented as follows:
+</p>
+
+<ul>
+  <li>Four FCBlocks: <code>fc1_t</code>, <code>fc1_c</code>, <code>fc2_t</code>, <code>fc2_c</code></li>
+  <li>Compute embeddings: <code>t1 = fc1_t(t)</code>, <code>c1 = fc1_c(c)</code>, <code>t2 = fc2_t(t)</code>, <code>c2 = fc2_c(c)</code></li>
+  <li>Modulate network layers: <code>unflatten = c1 * unflatten + t1</code>, <code>up1 = c2 * up1 + t2</code></li>
+</ul>
+        <h4>2.5 Training Class-Conditioned UNet</h4>
+        <p> Used same procedure as the time-only conditioning. Included conditioning vector c (one hot vector) and unconditional generation.</p>
+        <div class="gallery">
+            <div class="gallery-item">
+                <img src="images_5b/2.5/Class-conditioned_training_losscurve.png" alt="Class Cond Loss">
+                <div class="caption">Training Loss Curve (Class Cond)</div>
+            </div>
+        </div>
+
+
+<div class="gallery">
+  <div class="gallery-item">
+    <img src="images_5b/2.5/Class-conditioned_gen_digits_epoch1.png">
+    <div class="caption">Epoch 1</div>
+  </div>
+</div>
+
+<div class="gallery">
+  <div class="gallery-item">
+    <img src="images_5b/2.5/Class-conditioned_gen_digits_epoch5.png">
+    <div class="caption">Epoch 5</div>
+  </div>
+</div>
+
+<div class="gallery">
+  <div class="gallery-item">
+    <img src="images_5b/2.5/Class-conditioned_gen_digits_epoch10.png">
+    <div class="caption">Epoch 10</div>
+  </div>
+</div>
+
+    </div>
+
+    <div class="section">
+        <h3>2.6 Sampling from Class-Conditioned UNet </h3>
+        <p>Removing the Learning Rate Scheduler.</p>
+        <div class="gallery">
+            <div class="gallery-item">
+                <img src="images_5b/2.6/trainingloss_fixedlr.png" alt="No Scheduler">
+                <div class="caption">Results without Scheduler</div>
+            </div>
+        </div>
+
+        <div class="gallery">
+  <div class="gallery-item">
+    <img src="images_5b/2.6/epoch1.png">
+    <div class="caption">Epoch 1 Samples</div>
+  </div>
+</div>
+
+<div class="gallery">
+  <div class="gallery-item">
+    <img src="images_5b/2.6/epoch5.png">
+    <div class="caption">Epoch 5 Samples</div>
+  </div>
+</div>
+
+<div class="gallery">
+  <div class="gallery-item">
+    <img src="images_5b/2.6/epoch10.png">
+    <div class="caption">Epoch 10 Samples</div>
+  </div>
+</div>
+
+
+
+        <div class="response-text">
+            <p><strong>Approach:</strong> I implemented a constant learning rate strategy with a fixed value of 1e-4. While schedulers typically help fine-tune convergence by decaying the rate over time, the Adam optimizer is adaptive and performs well on its own if it starts with a stable rate. For the MNIST dataset, the UNet model (with hidden_dim=128) has sufficient capacity to learn the distribution without needing strong learning rate adjustments.</p>
+        </div>
+    </div>
+
+</div>
+
+</body>
+</html>
